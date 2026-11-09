@@ -61,12 +61,16 @@ public class ConfiguracaoSegurancaHttp {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/clientes/cadastro", "/api/v1/auth/login").permitAll()
                 // Rotas públicas de consulta ao catálogo e estoque informativo
                 .requestMatchers(HttpMethod.GET, "/api/v1/catalogo/**", "/api/v1/estoque/**").permitAll()
+                // Rotas públicas de consulta e manipulação de carrinho (Módulo 2)
+                .requestMatchers("/api/v1/carrinho/**").permitAll()
                 // Rotas exclusivas do próprio Cliente autenticado
                 .requestMatchers("/api/v1/clientes/me/**").hasRole("CLIENTE")
                 // Gestão de operadores e consulta de auditoria: exclusivo ADMIN
                 .requestMatchers("/api/v1/admin/usuarios/**", "/api/v1/admin/auditoria/**").hasRole("ADMIN")
                 // Administração de catálogo (categorias, produtos, variações, preços, combos): ADMIN ou OPERADOR_COMERCIAL
                 .requestMatchers("/api/v1/admin/catalogo/**").hasAnyRole("ADMIN", "OPERADOR_COMERCIAL")
+                // Administração de promoções e cupons (Módulo 2): ADMIN ou RESPONSAVEL_PROMOCOES
+                .requestMatchers("/api/v1/admin/promocoes/**", "/api/v1/admin/cupons/**").hasAnyRole("ADMIN", "RESPONSAVEL_PROMOCOES")
                 // Administração de estoque (ajustes manuais e expiração de reservas): ADMIN ou RESPONSAVEL_ESTOQUE
                 .requestMatchers("/api/v1/admin/estoque/**").hasAnyRole("ADMIN", "RESPONSAVEL_ESTOQUE")
                 // Operações de reserva/confirmação/liberação de estoque no checkout
@@ -79,4 +83,3 @@ public class ConfiguracaoSegurancaHttp {
         return http.build();
     }
 }
-
