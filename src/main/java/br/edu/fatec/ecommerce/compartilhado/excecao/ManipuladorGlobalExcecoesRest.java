@@ -85,7 +85,7 @@ public class ManipuladorGlobalExcecoesRest {
      * @param ex exceção de regra de negócio ou argumento inválido
      * @return resposta estruturada com status 400
      */
-    @ExceptionHandler({RegraNegocioModulo1Exception.class, IllegalArgumentException.class})
+    @ExceptionHandler({RegraNegocioModulo1Exception.class, br.edu.fatec.ecommerce.modulo3.compartilhado.excecao.RegraNegocioModulo3Exception.class, IllegalArgumentException.class})
     public ResponseEntity<Map<String, Object>> tratarRegraNegocioInvalida(RuntimeException ex) {
         return construirRespostaErro(HttpStatus.BAD_REQUEST, "DADOS_INVALIDOS", ex.getMessage());
     }
