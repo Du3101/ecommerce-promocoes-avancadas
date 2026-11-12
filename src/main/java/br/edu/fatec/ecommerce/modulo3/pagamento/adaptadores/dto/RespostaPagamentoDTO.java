@@ -1,71 +1,107 @@
 package br.edu.fatec.ecommerce.modulo3.pagamento.adaptadores.dto;
 
 import br.edu.fatec.ecommerce.modulo3.pagamento.dominio.StatusTransacaoPagamento;
+import java.time.Instant;
 
 /**
- * DTO que padroniza o retorno dos gateways externos de pagamento simulados.
+ * Resposta de cobrança já traduzida para o modelo interno.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Objeto unificado produzido pelos adaptadores do padrão <i>Adapter</i>.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> saída da Anti-Corruption Layer. Independentemente do provedor,
+ * o checkout só enxerga este formato.
+ *
+ * @param sucesso {@code false} se a cobrança foi recusada
+ * @param statusTransacao {@code PENDENTE} (PIX/boleto), {@code CONFIRMADA} (cartão aprovado) ou {@code RECUSADA}
+ * @param identificadorGateway identificador da transação no provedor
+ * @param chavePixCopiaECola chave PIX copia-e-cola (somente PIX)
+ * @param qrCodeBase64 imagem do QR Code em Base64 (somente PIX)
+ * @param linhaDigitavelBoleto linha digitável (somente boleto)
+ * @param expiraEm validade da cobrança (PIX e boleto)
+ * @param mensagem mensagem legível do provedor
  *
  * @author Henrique Sandrini (Integrante 3)
  */
-public class RespostaPagamentoDTO {
+public record RespostaPagamentoDTO(
+        boolean sucesso,
+        StatusTransacaoPagamento statusTransacao,
+        String identificadorGateway,
+        String chavePixCopiaECola,
+        String qrCodeBase64,
+        String linhaDigitavelBoleto,
+        Instant expiraEm,
+        String mensagem
+) {
 
-    private boolean sucesso;
-    private StatusTransacaoPagamento statusTransacao;
-    private String identificadorGateway;
-    private String chavePixCopiaECola;
-    private String qrCodeBase64;
-    private String linhaDigitavelBoleto;
-    private String mensagem;
-
-    public RespostaPagamentoDTO() {
+    /**
+     * Cobrança PIX emitida, aguardando pagamento.
+     *
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> semântico.</p>
+     *
+     * @param idGateway identificador no provedor
+     * @param chavePix chave copia-e-cola
+     * @param qrCode QR Code em Base64
+     * @param expiraEm validade da cobrança
+     * @return resposta pendente
+     */
+    public static RespostaPagamentoDTO pixEmitido(String idGateway, String chavePix, String qrCode, Instant expiraEm) {
+        return new RespostaPagamentoDTO(true, StatusTransacaoPagamento.PENDENTE, idGateway, chavePix, qrCode, null,
+                expiraEm, "Chave PIX e QR Code gerados com sucesso.");
     }
 
-    public static RespostaPagamentoDTO sucessoPix(String idGateway, String chavePix, String qrCode) {
-        RespostaPagamentoDTO dto = new RespostaPagamentoDTO();
-        dto.sucesso = true;
-        dto.statusTransacao = StatusTransacaoPagamento.PENDENTE;
-        dto.identificadorGateway = idGateway;
-        dto.chavePixCopiaECola = chavePix;
-        dto.qrCodeBase64 = qrCode;
-        dto.mensagem = "Chave PIX e QR Code gerados com sucesso.";
-        return dto;
+    /**
+     * Cartão aprovado online.
+     *
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> semântico.</p>
+     *
+     * @param idGateway código de autorização
+     * @param finalCartao 4 últimos dígitos
+     * @return resposta confirmada
+     */
+    public static RespostaPagamentoDTO cartaoAprovado(String idGateway, String finalCartao) {
+        return new RespostaPagamentoDTO(true, StatusTransacaoPagamento.CONFIRMADA, idGateway, null, null, null,
+                null, "Transação aprovada no cartão final " + finalCartao + ".");
     }
 
-    public static RespostaPagamentoDTO sucessoCartao(String idGateway) {
-        RespostaPagamentoDTO dto = new RespostaPagamentoDTO();
-        dto.sucesso = true;
-        dto.statusTransacao = StatusTransacaoPagamento.CONFIRMADA;
-        dto.identificadorGateway = idGateway;
-        dto.mensagem = "Transação aprovada online pela operadora do cartão.";
-        return dto;
+    /**
+     * Boleto emitido, aguardando pagamento.
+     *
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> semântico.</p>
+     *
+     * @param idGateway identificador no provedor
+     * @param linhaDigitavel linha digitável
+     * @param vencimento vencimento do boleto
+     * @return resposta pendente
+     */
+    public static RespostaPagamentoDTO boletoEmitido(String idGateway, String linhaDigitavel, Instant vencimento) {
+        return new RespostaPagamentoDTO(true, StatusTransacaoPagamento.PENDENTE, idGateway, null, null,
+                linhaDigitavel, vencimento, "Boleto bancário gerado com sucesso.");
     }
 
-    public static RespostaPagamentoDTO sucessoBoleto(String idGateway, String linhaDigitavel) {
-        RespostaPagamentoDTO dto = new RespostaPagamentoDTO();
-        dto.sucesso = true;
-        dto.statusTransacao = StatusTransacaoPagamento.PENDENTE;
-        dto.identificadorGateway = idGateway;
-        dto.linhaDigitavelBoleto = linhaDigitavel;
-        dto.mensagem = "Boleto bancário gerado com código de barras válido.";
-        return dto;
+    /**
+     * Cobrança recusada pelo provedor.
+     *
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> semântico.</p>
+     *
+     * @param idGateway identificador da tentativa (pode ser nulo)
+     * @param mensagem motivo da recusa
+     * @return resposta recusada
+     */
+    public static RespostaPagamentoDTO recusa(String idGateway, String mensagem) {
+        return new RespostaPagamentoDTO(false, StatusTransacaoPagamento.RECUSADA, idGateway, null, null, null,
+                null, mensagem);
     }
 
-    public static RespostaPagamentoDTO recusa(String mensagem) {
-        RespostaPagamentoDTO dto = new RespostaPagamentoDTO();
-        dto.sucesso = false;
-        dto.statusTransacao = StatusTransacaoPagamento.RECUSADA;
-        dto.mensagem = mensagem;
-        return dto;
+    /**
+     * Texto que comprova a cobrança, gravado na transação (chave PIX, linha digitável ou mensagem de autorização).
+     *
+     * @return comprovante resumido
+     */
+    public String comprovante() {
+        if (chavePixCopiaECola != null) {
+            return chavePixCopiaECola;
+        }
+        if (linhaDigitavelBoleto != null) {
+            return linhaDigitavelBoleto;
+        }
+        return mensagem;
     }
-
-    public boolean isSucesso() { return sucesso; }
-    public StatusTransacaoPagamento getStatusTransacao() { return statusTransacao; }
-    public String getIdentificadorGateway() { return identificadorGateway; }
-    public String getChavePixCopiaECola() { return chavePixCopiaECola; }
-    public String getQrCodeBase64() { return qrCodeBase64; }
-    public String getLinhaDigitavelBoleto() { return linhaDigitavelBoleto; }
-    public String getMensagem() { return mensagem; }
 }

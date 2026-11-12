@@ -1,42 +1,46 @@
 package br.edu.fatec.ecommerce.modulo3.frete.adaptadores;
 
-import br.edu.fatec.ecommerce.modulo3.frete.dominio.CotacaoFrete;
+import br.edu.fatec.ecommerce.modulo3.frete.adaptadores.externo.ApiCorreiosSimulada;
 import br.edu.fatec.ecommerce.modulo3.frete.dominio.ModalidadeFrete;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import org.springframework.stereotype.Component;
 
 /**
- * Adaptador simulado para frete expresso prioritário dos Correios (SEDEX).
+ * Adaptador do serviço SEDEX (expresso) dos Correios.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Concrete Adapter do padrão <b>Adapter</b>.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> <i>Concrete Adapter</i> sobre a mesma API do PAC, mudando apenas
+ * o código de serviço.
  *
  * @author Henrique Sandrini (Integrante 3)
  */
 @Component
-public class CorreiosSedexAdapter implements CalculadoraFretePort {
+public class CorreiosSedexAdapter extends AdaptadorCorreiosBase {
 
-    @Override
-    public boolean suporta(ModalidadeFrete modalidade) {
-        return modalidade == ModalidadeFrete.CORREIOS_SEDEX;
+    /**
+     * Construtor com a API dos Correios injetada.
+     *
+     * @param apiCorreios cliente da API dos Correios
+     */
+    public CorreiosSedexAdapter(ApiCorreiosSimulada apiCorreios) {
+        super(apiCorreios);
     }
 
+    /**
+     * Modalidade atendida.
+     *
+     * @return {@link ModalidadeFrete#CORREIOS_SEDEX}
+     */
     @Override
-    public CotacaoFrete calcularFrete(String cepDestino, int pesoTotalGramas, BigDecimal subtotalLiquido) {
-        BigDecimal base = new BigDecimal("35.00");
-        BigDecimal adicionalPeso = BigDecimal.valueOf(Math.max(0, pesoTotalGramas))
-                .multiply(new BigDecimal("0.008"))
-                .setScale(2, RoundingMode.HALF_EVEN);
-        BigDecimal valorOriginal = base.add(adicionalPeso).setScale(2, RoundingMode.HALF_EVEN);
+    public ModalidadeFrete modalidade() {
+        return ModalidadeFrete.CORREIOS_SEDEX;
+    }
 
-        return new CotacaoFrete(
-                ModalidadeFrete.CORREIOS_SEDEX,
-                ModalidadeFrete.CORREIOS_SEDEX.getTransportadora(),
-                valorOriginal,
-                valorOriginal,
-                false,
-                2
-        );
+    /**
+     * Código do SEDEX na API dos Correios.
+     *
+     * @return {@code "04014"}
+     */
+    @Override
+    protected String codigoServico() {
+        return ApiCorreiosSimulada.SERVICO_SEDEX;
     }
 }

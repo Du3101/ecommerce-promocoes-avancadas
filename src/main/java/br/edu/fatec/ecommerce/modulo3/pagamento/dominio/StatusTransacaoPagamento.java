@@ -29,5 +29,10 @@ public enum StatusTransacaoPagamento {
     /**
      * Valor integralmente estornado de volta ao cliente em razão de cancelamento.
      */
-    ESTORNADA
+    ESTORNADA,
+
+    /**
+     * Cobrança pendente (PIX/boleto) invalidada porque o pedido foi cancelado antes do pagamento.
+     */
+    CANCELADA
 }

@@ -2,42 +2,37 @@ package br.edu.fatec.ecommerce.modulo3.pagamento.adaptadores;
 
 import br.edu.fatec.ecommerce.modulo3.pagamento.adaptadores.dto.RequisicaoCobrancaDTO;
 import br.edu.fatec.ecommerce.modulo3.pagamento.adaptadores.dto.RespostaPagamentoDTO;
-import br.edu.fatec.ecommerce.modulo3.pagamento.dominio.MetodoPagamento;
 import java.math.BigDecimal;
 
 /**
- * Porta de integração com provedores de liquidação financeira.
+ * Porta interna de cobrança e estorno junto a um provedor de pagamento.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Interface <i>Target</i> do padrão <b>Adapter</b> / Camada Anticorrupção (ACL).
- * Permite que o sistema efetue cobranças e solicite estornos junto a gateways externos
- * sem que o domínio conheça estruturas proprietárias de terceiros.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> interface <i>Target</i> do padrão <b>Adapter</b> /
+ * Anti-Corruption Layer. Cada provedor (PIX, cartão, boleto) tem seu adaptador; o checkout e o cancelamento
+ * só conhecem esta interface. A escolha do adaptador é feita pela família de pagamento (Abstract Factory) e pelo
+ * {@code GatewayPagamentoServiceLocator}.
  *
  * @author Henrique Sandrini (Integrante 3)
  */
 public interface GatewayPagamentoPort {
 
     /**
-     * Verifica se este adaptador processa o método solicitado.
+     * Emite a cobrança no provedor.
      *
-     * @param metodo Método de pagamento.
-     * @return {@code true} se o adaptador processa a modalidade.
-     */
-    boolean suporta(MetodoPagamento metodo);
-
-    /**
-     * Efetua a autorização ou registro inicial de cobrança no provedor financeiro.
+     * <p>Recusas são devolvidas como {@link RespostaPagamentoDTO#recusa(String, String)} (resultado de negócio),
+     * nunca como exceção, para que o checkout possa liberar o estoque e registrar a recusa.</p>
      *
-     * @param requisicao Dados da cobrança.
-     * @return Resposta padronizada do gateway.
+     * @param requisicao dados da cobrança no modelo interno
+     * @return resposta traduzida para o modelo interno
      */
     RespostaPagamentoDTO processarCobranca(RequisicaoCobrancaDTO requisicao);
 
     /**
-     * Solicita o estorno financeiro de uma transação liquidada.
+     * Solicita a devolução do valor ao cliente (cancelamento de pedido pago).
      *
-     * @param identificadorGateway Código retornado originalmente pelo gateway.
-     * @param valor Valor monetário a ser estornado.
+     * @param identificadorGateway identificador da transação original no provedor
+     * @param valor valor a devolver
+     * @return protocolo do estorno no provedor
      */
-    void solicitarEstorno(String identificadorGateway, BigDecimal valor);
+    String solicitarEstorno(String identificadorGateway, BigDecimal valor);
 }

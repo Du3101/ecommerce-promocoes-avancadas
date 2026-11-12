@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -38,6 +40,70 @@ public interface PedidoJpaRepository extends JpaRepository<Pedido, UUID> {
      * @return Optional contendo o pedido se existir.
      */
     Optional<Pedido> findByChaveOperacaoEstoque(String chaveOperacaoEstoque);
+
+    /**
+     * Carrega o pedido pelo número comercial com bloqueio pessimista de escrita ({@code SELECT ... FOR UPDATE}).
+     *
+     * <p>Objetivo Funcional: serializar confirmações de pagamento concorrentes para o mesmo pedido (webhook
+     * reenviado ao mesmo tempo), base da garantia de idempotência.</p>
+     *
+     * @param numeroPedido número do pedido
+     * @return Optional com o pedido bloqueado até o fim da transação
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Pedido p WHERE p.numeroPedido = :numeroPedido")
+    Optional<Pedido> buscarPorNumeroComLock(@Param("numeroPedido") String numeroPedido);
+
+    /**
+     * Carrega o pedido pelo ID com bloqueio pessimista de escrita.
+     *
+     * <p>Objetivo Funcional: serializar cancelamento, transições administrativas e confirmação de pagamento
+     * concorrentes sobre o mesmo pedido (edge case "cancelamento x aprovação do gateway" da spec).</p>
+     *
+     * @param id UUID do pedido
+     * @return Optional com o pedido bloqueado até o fim da transação
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Pedido p WHERE p.id = :id")
+    Optional<Pedido> buscarPorIdComLock(@Param("id") UUID id);
+
+    /**
+     * Verifica se já existe pedido com o número informado (geração de números únicos).
+     *
+     * @param numeroPedido número candidato
+     * @return {@code true} se o número já estiver em uso
+     */
+    boolean existsByNumeroPedido(String numeroPedido);
+
+    /**
+     * Conta clientes distintos com pedidos nos status informados.
+     *
+     * @param statuses status considerados
+     * @return quantidade de clientes distintos
+     */
+    @Query("SELECT COUNT(DISTINCT p.clienteId) FROM Pedido p WHERE p.status IN :statuses")
+    long contarClientesDistintosPorStatus(@Param("statuses") List<StatusPedido> statuses);
+
+    /**
+     * Agrupa os pedidos faturados por cupom: [codigoCupom, quantidadePedidos, somaDescontos].
+     *
+     * @param statuses status faturados
+     * @return linhas agregadas ordenadas pelo maior desconto concedido
+     */
+    @Query("SELECT p.cupomUtilizado, COUNT(p), SUM(p.financeiro.totalDescontos) FROM Pedido p "
+            + "WHERE p.status IN :statuses AND p.cupomUtilizado IS NOT NULL "
+            + "GROUP BY p.cupomUtilizado ORDER BY SUM(p.financeiro.totalDescontos) DESC")
+    List<Object[]> agruparDescontosPorCupom(@Param("statuses") List<StatusPedido> statuses);
+
+    /**
+     * Agrupa os pedidos cancelados ou recusados por motivo: [motivo, quantidade].
+     *
+     * @param statuses status de cancelamento/recusa
+     * @return linhas agregadas ordenadas pela maior frequência
+     */
+    @Query("SELECT p.motivoCancelamento, COUNT(p) FROM Pedido p WHERE p.status IN :statuses "
+            + "GROUP BY p.motivoCancelamento ORDER BY COUNT(p) DESC")
+    List<Object[]> agruparMotivosCancelamento(@Param("statuses") List<StatusPedido> statuses);
 
     /**
      * Retorna o histórico de pedidos de um cliente ordenados do mais recente ao mais antigo.

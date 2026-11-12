@@ -33,4 +33,12 @@ public interface TransacaoPagamentoJpaRepository extends JpaRepository<Transacao
      * @return Lista de transações do pedido.
      */
     List<TransacaoPagamento> findByPedidoIdOrderByProcessadoEmDesc(UUID pedidoId);
+
+    /**
+     * Localiza a transação mais recente de um pedido (cada pedido tem uma cobrança emitida no checkout).
+     *
+     * @param pedidoId UUID do pedido.
+     * @return Optional com a transação mais recente.
+     */
+    Optional<TransacaoPagamento> findFirstByPedidoIdOrderByProcessadoEmDesc(UUID pedidoId);
 }

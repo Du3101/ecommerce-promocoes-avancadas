@@ -75,6 +75,17 @@ public class ConfiguracaoSegurancaHttp {
                 .requestMatchers("/api/v1/admin/estoque/**").hasAnyRole("ADMIN", "RESPONSAVEL_ESTOQUE")
                 // Operações de reserva/confirmação/liberação de estoque no checkout
                 .requestMatchers("/api/v1/estoque/reservas/**").hasAnyRole("CLIENTE", "ADMIN", "RESPONSAVEL_ESTOQUE")
+                // Módulo 3 — webhook do gateway (autenticado por X-Gateway-Token) e simulação de frete: públicos
+                .requestMatchers(HttpMethod.POST, "/api/v1/pagamentos/confirmacao", "/api/v1/frete/calcular").permitAll()
+                // Módulo 3 — checkout e histórico próprio: somente clientes
+                .requestMatchers(HttpMethod.POST, "/api/v1/checkout").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/api/v1/pedidos/me").hasRole("CLIENTE")
+                // Módulo 3 — detalhe e cancelamento: cliente (somente os próprios, checado no serviço) ou ADMIN
+                .requestMatchers("/api/v1/pedidos/**").hasAnyRole("CLIENTE", "ADMIN")
+                // Módulo 3 — expedição: ADMIN ou OPERADOR_COMERCIAL
+                .requestMatchers("/api/v1/admin/pedidos/**").hasAnyRole("ADMIN", "OPERADOR_COMERCIAL")
+                // Módulo 3 — relatórios gerenciais: exclusivo ADMIN
+                .requestMatchers("/api/v1/admin/relatorios/**").hasRole("ADMIN")
                 // Qualquer outra rota exige autenticação
                 .anyRequest().authenticated()
             )

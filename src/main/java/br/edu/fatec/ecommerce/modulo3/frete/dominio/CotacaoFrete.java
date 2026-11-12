@@ -5,51 +5,72 @@ import java.math.RoundingMode;
 import java.util.Objects;
 
 /**
- * Value Object imutável que representa o resultado da cotação de frete para uma modalidade específica.
+ * Value Object imutável com o resultado da cotação de uma modalidade de frete.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Value Object do domínio logístico encapsulando os cálculos do padrão <i>Adapter</i>.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> modelo <b>interno</b> do domínio. Cada adaptador de
+ * transportadora (Adapter / Anti-Corruption Layer) traduz o formato proprietário da API externa para este objeto,
+ * de modo que o restante do sistema nunca vê os formatos das transportadoras.
+ *
+ * @param modalidade modalidade cotada
+ * @param transportadora empresa responsável
+ * @param valorOriginal preço calculado pela transportadora
+ * @param valorCobrado preço efetivamente cobrado do cliente (zero se frete grátis)
+ * @param freteGratisAplicado se a política de frete grátis zerou esta cotação
+ * @param prazoDiasUteis prazo de entrega em dias úteis
  *
  * @author Henrique Sandrini (Integrante 3)
  */
-public class CotacaoFrete {
-
-    private final ModalidadeFrete modalidade;
-    private final String transportadora;
-    private final BigDecimal valorOriginal;
-    private final BigDecimal valorCobrado;
-    private final boolean freteGratisAplicado;
-    private final int prazoDiasUteis;
+public record CotacaoFrete(
+        ModalidadeFrete modalidade,
+        String transportadora,
+        BigDecimal valorOriginal,
+        BigDecimal valorCobrado,
+        boolean freteGratisAplicado,
+        int prazoDiasUteis
+) {
 
     /**
-     * Construtor completo da cotação com garantia de escala monetária.
+     * Construtor canônico com validação e padronização monetária (escala 2, HALF_EVEN).
      *
-     * @param modalidade Modalidade do frete.
-     * @param transportadora Nome da empresa responsável.
-     * @param valorOriginal Valor de tabela da cotação.
-     * @param valorCobrado Valor efetivo após regras de frete grátis.
-     * @param freteGratisAplicado Indicador se houve isenção de taxa.
-     * @param prazoDiasUteis Prazo estimado em dias úteis.
+     * @param modalidade modalidade cotada
+     * @param transportadora empresa responsável
+     * @param valorOriginal preço calculado
+     * @param valorCobrado preço cobrado
+     * @param freteGratisAplicado indicador de frete grátis
+     * @param prazoDiasUteis prazo em dias úteis (mínimo 1)
      */
-    public CotacaoFrete(
-            ModalidadeFrete modalidade,
-            String transportadora,
-            BigDecimal valorOriginal,
-            BigDecimal valorCobrado,
-            boolean freteGratisAplicado,
-            int prazoDiasUteis) {
-        this.modalidade = Objects.requireNonNull(modalidade, "Modalidade é obrigatória.");
-        this.transportadora = Objects.requireNonNull(transportadora, "Transportadora é obrigatória.");
-        this.valorOriginal = valorOriginal.setScale(2, RoundingMode.HALF_EVEN);
-        this.valorCobrado = valorCobrado.setScale(2, RoundingMode.HALF_EVEN);
-        this.freteGratisAplicado = freteGratisAplicado;
-        this.prazoDiasUteis = Math.max(1, prazoDiasUteis);
+    public CotacaoFrete {
+        Objects.requireNonNull(modalidade, "Modalidade é obrigatória.");
+        Objects.requireNonNull(transportadora, "Transportadora é obrigatória.");
+        valorOriginal = Objects.requireNonNull(valorOriginal, "Valor original é obrigatório.")
+                .setScale(2, RoundingMode.HALF_EVEN);
+        valorCobrado = Objects.requireNonNull(valorCobrado, "Valor cobrado é obrigatório.")
+                .setScale(2, RoundingMode.HALF_EVEN);
+        prazoDiasUteis = Math.max(1, prazoDiasUteis);
     }
 
-    public ModalidadeFrete getModalidade() { return modalidade; }
-    public String getTransportadora() { return transportadora; }
-    public BigDecimal getValorOriginal() { return valorOriginal; }
-    public BigDecimal getValorCobrado() { return valorCobrado; }
-    public boolean isFreteGratisAplicado() { return freteGratisAplicado; }
-    public int getPrazoDiasUteis() { return prazoDiasUteis; }
+    /**
+     * Cria uma cotação sem benefício (valor cobrado = valor original).
+     *
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> usado pelos adaptadores.</p>
+     *
+     * @param modalidade modalidade cotada
+     * @param valor preço calculado
+     * @param prazoDiasUteis prazo em dias úteis
+     * @return nova cotação
+     */
+    public static CotacaoFrete semBeneficio(ModalidadeFrete modalidade, BigDecimal valor, int prazoDiasUteis) {
+        return new CotacaoFrete(modalidade, modalidade.getTransportadora(), valor, valor, false, prazoDiasUteis);
+    }
+
+    /**
+     * Devolve uma nova cotação com o valor cobrado zerado pela política de frete grátis.
+     *
+     * <p>Papel no Design Pattern: operação imutável do Value Object (retorna nova instância).</p>
+     *
+     * @return cópia com {@code valorCobrado = 0,00} e {@code freteGratisAplicado = true}
+     */
+    public CotacaoFrete comFreteGratis() {
+        return new CotacaoFrete(modalidade, transportadora, valorOriginal, BigDecimal.ZERO, true, prazoDiasUteis);
+    }
 }

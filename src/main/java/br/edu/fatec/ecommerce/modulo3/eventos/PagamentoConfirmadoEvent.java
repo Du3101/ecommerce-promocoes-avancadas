@@ -1,39 +1,67 @@
 package br.edu.fatec.ecommerce.modulo3.eventos;
 
+import br.edu.fatec.ecommerce.modulo3.pedido.dominio.Pedido;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Evento emitido quando a liquidação financeira de um Pedido é aprovada pelo gateway.
+ * Evento publicado quando o pagamento de um pedido é confirmado (cartão aprovado online ou webhook de PIX/boleto).
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Concrete Event do padrão <b>Observer</b>.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> mensagem do <b>Observer</b>. Por causa da idempotência do
+ * webhook, este evento é publicado <b>uma única vez</b> por pedido, mesmo que o gateway reenvie a confirmação.
+ *
+ * @param eventoId identificador da ocorrência
+ * @param ocorridoEm instante da confirmação
+ * @param pedidoId UUID do pedido
+ * @param numeroPedido número comercial do pedido
+ * @param emailCliente e-mail do cliente
+ * @param nomeCliente nome do cliente
+ * @param identificadorTransacao identificador da transação no gateway
+ * @param valorPago valor confirmado
  *
  * @author Henrique Sandrini (Integrante 3)
  */
-public class PagamentoConfirmadoEvent implements EventoDominio {
+public record PagamentoConfirmadoEvent(
+        UUID eventoId,
+        Instant ocorridoEm,
+        UUID pedidoId,
+        String numeroPedido,
+        String emailCliente,
+        String nomeCliente,
+        String identificadorTransacao,
+        BigDecimal valorPago
+) implements EventoDominio {
 
-    private final UUID eventoId;
-    private final Instant ocorridoEm;
-    private final UUID pedidoId;
-    private final String numeroPedido;
-    private final String chaveOperacaoEstoque;
-    private final BigDecimal valorPago;
-
-    public PagamentoConfirmadoEvent(UUID pedidoId, String numeroPedido, String chaveOperacaoEstoque, BigDecimal valorPago) {
-        this.eventoId = UUID.randomUUID();
-        this.ocorridoEm = Instant.now();
-        this.pedidoId = pedidoId;
-        this.numeroPedido = numeroPedido;
-        this.chaveOperacaoEstoque = chaveOperacaoEstoque;
-        this.valorPago = valorPago;
+    /**
+     * Cria o evento a partir do pedido pago.
+     *
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> semântico.</p>
+     *
+     * @param pedido pedido que acabou de ser pago
+     * @param identificadorTransacao identificador da transação no gateway
+     * @return novo evento imutável
+     */
+    public static PagamentoConfirmadoEvent de(Pedido pedido, String identificadorTransacao) {
+        return new PagamentoConfirmadoEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                pedido.getId(),
+                pedido.getNumeroPedido(),
+                pedido.getEmailCliente(),
+                pedido.getNomeCliente(),
+                identificadorTransacao,
+                pedido.getFinanceiro().getValorTotalLiquido());
     }
 
-    @Override public UUID getEventoId() { return eventoId; }
-    @Override public Instant getOcorridoEm() { return ocorridoEm; }
-    public UUID getPedidoId() { return pedidoId; }
-    public String getNumeroPedido() { return numeroPedido; }
-    public String getChaveOperacaoEstoque() { return chaveOperacaoEstoque; }
-    public BigDecimal getValorPago() { return valorPago; }
+    /**
+     * Descreve o evento para logs e notificações.
+     *
+     * @return resumo legível
+     */
+    @Override
+    public String resumo() {
+        return String.format("Pagamento de R$ %s do pedido %s confirmado (transação %s). O pedido segue para a expedição.",
+                valorPago, numeroPedido, identificadorTransacao);
+    }
 }

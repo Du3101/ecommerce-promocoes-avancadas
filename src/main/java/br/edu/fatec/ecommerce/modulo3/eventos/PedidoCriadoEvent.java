@@ -1,39 +1,70 @@
 package br.edu.fatec.ecommerce.modulo3.eventos;
 
+import br.edu.fatec.ecommerce.modulo3.pedido.dominio.Pedido;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Evento emitido quando um novo Pedido é criado com sucesso no checkout.
+ * Evento publicado quando o checkout cria um novo pedido.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Concrete Event do padrão <b>Observer</b>.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> mensagem do <b>Observer</b>. Os ouvintes enviam ao cliente o
+ * resumo da compra e as instruções de pagamento (chave PIX, linha digitável do boleto ou autorização do cartão).
+ *
+ * @param eventoId identificador da ocorrência
+ * @param ocorridoEm instante da criação do pedido
+ * @param pedidoId UUID do pedido
+ * @param numeroPedido número comercial do pedido
+ * @param emailCliente e-mail do cliente
+ * @param nomeCliente nome do cliente
+ * @param metodoPagamento método escolhido (texto amigável)
+ * @param valorTotalLiquido valor total a pagar
+ * @param instrucoesPagamento instruções formatadas pela família de pagamento (Abstract Factory)
  *
  * @author Henrique Sandrini (Integrante 3)
  */
-public class PedidoCriadoEvent implements EventoDominio {
+public record PedidoCriadoEvent(
+        UUID eventoId,
+        Instant ocorridoEm,
+        UUID pedidoId,
+        String numeroPedido,
+        String emailCliente,
+        String nomeCliente,
+        String metodoPagamento,
+        BigDecimal valorTotalLiquido,
+        String instrucoesPagamento
+) implements EventoDominio {
 
-    private final UUID eventoId;
-    private final Instant ocorridoEm;
-    private final UUID pedidoId;
-    private final String numeroPedido;
-    private final UUID clienteId;
-    private final BigDecimal valorTotalLiquido;
-
-    public PedidoCriadoEvent(UUID pedidoId, String numeroPedido, UUID clienteId, BigDecimal valorTotalLiquido) {
-        this.eventoId = UUID.randomUUID();
-        this.ocorridoEm = Instant.now();
-        this.pedidoId = pedidoId;
-        this.numeroPedido = numeroPedido;
-        this.clienteId = clienteId;
-        this.valorTotalLiquido = valorTotalLiquido;
+    /**
+     * Cria o evento a partir do pedido recém-criado.
+     *
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> semântico.</p>
+     *
+     * @param pedido pedido criado no checkout
+     * @param instrucoesPagamento instruções de pagamento já formatadas
+     * @return novo evento imutável
+     */
+    public static PedidoCriadoEvent de(Pedido pedido, String instrucoesPagamento) {
+        return new PedidoCriadoEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                pedido.getId(),
+                pedido.getNumeroPedido(),
+                pedido.getEmailCliente(),
+                pedido.getNomeCliente(),
+                pedido.getMetodoPagamento().getDescricaoExibicao(),
+                pedido.getFinanceiro().getValorTotalLiquido(),
+                instrucoesPagamento);
     }
 
-    @Override public UUID getEventoId() { return eventoId; }
-    @Override public Instant getOcorridoEm() { return ocorridoEm; }
-    public UUID getPedidoId() { return pedidoId; }
-    public String getNumeroPedido() { return numeroPedido; }
-    public UUID getClienteId() { return clienteId; }
-    public BigDecimal getValorTotalLiquido() { return valorTotalLiquido; }
+    /**
+     * Descreve o evento para logs e notificações.
+     *
+     * @return resumo legível
+     */
+    @Override
+    public String resumo() {
+        return String.format("Pedido %s criado no valor de R$ %s (%s). %s",
+                numeroPedido, valorTotalLiquido, metodoPagamento, instrucoesPagamento);
+    }
 }

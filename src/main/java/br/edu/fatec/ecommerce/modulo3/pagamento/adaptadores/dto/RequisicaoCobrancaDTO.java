@@ -5,62 +5,46 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * DTO com dados de entrada para envio à Camada Anticorrupção (ACL) do gateway.
+ * Pedido de cobrança no modelo interno, entregue a um {@code GatewayPagamentoPort}.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Objeto de entrada da interface do padrão <i>Adapter</i>.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> DTO do lado "domínio" da Anti-Corruption Layer. Cada adaptador
+ * de gateway traduz estes dados para o formato do seu provedor. Dados de cartão são estritamente fictícios
+ * (Princípio V da Constituição) e nunca são persistidos.
+ *
+ * @param pedidoId UUID do pedido
+ * @param numeroPedido número comercial do pedido
+ * @param metodo método de pagamento
+ * @param valor valor a cobrar
+ * @param chaveIdempotencia chave idempotente da cobrança (evita cobrança dupla no provedor)
+ * @param nomeCliente nome do pagador
+ * @param cpfCliente CPF do pagador (exigido por PIX e boleto)
+ * @param numeroCartaoFicticio número de cartão fictício (somente cartão)
+ * @param titularCartao nome impresso no cartão fictício (somente cartão)
  *
  * @author Henrique Sandrini (Integrante 3)
  */
-public class RequisicaoCobrancaDTO {
+public record RequisicaoCobrancaDTO(
+        UUID pedidoId,
+        String numeroPedido,
+        MetodoPagamento metodo,
+        BigDecimal valor,
+        String chaveIdempotencia,
+        String nomeCliente,
+        String cpfCliente,
+        String numeroCartaoFicticio,
+        String titularCartao
+) {
 
-    private UUID pedidoId;
-    private String numeroPedido;
-    private MetodoPagamento metodo;
-    private BigDecimal valor;
-    private String chaveIdempotencia;
-    private String nomeCliente;
-    private String cpfCliente;
-    private String numeroCartaoFicticio;
-    private String titularCartao;
-
-    public RequisicaoCobrancaDTO() {
+    /**
+     * Retorna os 4 últimos dígitos do cartão (para exibição segura).
+     *
+     * @return últimos 4 dígitos ou {@code "****"} se não houver cartão
+     */
+    public String finalCartao() {
+        if (numeroCartaoFicticio == null) {
+            return "****";
+        }
+        String digitos = numeroCartaoFicticio.replaceAll("\\D", "");
+        return digitos.length() >= 4 ? digitos.substring(digitos.length() - 4) : "****";
     }
-
-    public RequisicaoCobrancaDTO(UUID pedidoId, String numeroPedido, MetodoPagamento metodo, BigDecimal valor, String chaveIdempotencia, String nomeCliente, String cpfCliente) {
-        this.pedidoId = pedidoId;
-        this.numeroPedido = numeroPedido;
-        this.metodo = metodo;
-        this.valor = valor;
-        this.chaveIdempotencia = chaveIdempotencia;
-        this.nomeCliente = nomeCliente;
-        this.cpfCliente = cpfCliente;
-    }
-
-    public UUID getPedidoId() { return pedidoId; }
-    public void setPedidoId(UUID pedidoId) { this.pedidoId = pedidoId; }
-
-    public String getNumeroPedido() { return numeroPedido; }
-    public void setNumeroPedido(String numeroPedido) { this.numeroPedido = numeroPedido; }
-
-    public MetodoPagamento getMetodo() { return metodo; }
-    public void setMetodo(MetodoPagamento metodo) { this.metodo = metodo; }
-
-    public BigDecimal getValor() { return valor; }
-    public void setValor(BigDecimal valor) { this.valor = valor; }
-
-    public String getChaveIdempotencia() { return chaveIdempotencia; }
-    public void setChaveIdempotencia(String chaveIdempotencia) { this.chaveIdempotencia = chaveIdempotencia; }
-
-    public String getNomeCliente() { return nomeCliente; }
-    public void setNomeCliente(String nomeCliente) { this.nomeCliente = nomeCliente; }
-
-    public String getCpfCliente() { return cpfCliente; }
-    public void setCpfCliente(String cpfCliente) { this.cpfCliente = cpfCliente; }
-
-    public String getNumeroCartaoFicticio() { return numeroCartaoFicticio; }
-    public void setNumeroCartaoFicticio(String numeroCartaoFicticio) { this.numeroCartaoFicticio = numeroCartaoFicticio; }
-
-    public String getTitularCartao() { return titularCartao; }
-    public void setTitularCartao(String titularCartao) { this.titularCartao = titularCartao; }
 }

@@ -117,6 +117,15 @@ public class TransacaoPagamento {
     }
 
     /**
+     * Invalida uma cobrança pendente porque o pedido foi cancelado antes do pagamento.
+     *
+     * <p>Papel no Design Pattern: participante coordenado pelo {@code CoordenadorCancelamentoMediator}.</p>
+     */
+    public void cancelar() {
+        this.status = StatusTransacaoPagamento.CANCELADA;
+    }
+
+    /**
      * Registra o estorno financeiro da transação.
      */
     public void estornar() {

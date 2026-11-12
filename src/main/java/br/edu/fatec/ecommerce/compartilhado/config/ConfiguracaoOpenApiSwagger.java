@@ -6,6 +6,8 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.tags.Tag;
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -53,7 +55,28 @@ public class ConfiguracaoOpenApiSwagger {
         return new OpenAPI()
             .info(informacoesApi)
             .components(new Components().addSecuritySchemes(ESQUEMA_BASIC_AUTH, esquemaSegurancaBasic))
-            .addSecurityItem(new SecurityRequirement().addList(ESQUEMA_BASIC_AUTH));
+            .addSecurityItem(new SecurityRequirement().addList(ESQUEMA_BASIC_AUTH))
+            .tags(criarTagsModulo3());
+    }
+
+    /**
+     * Cria as tags (grupos de endpoints) do Módulo 3 exibidas no Swagger UI.
+     *
+     * <p>Objetivo Funcional: Organizar os endpoints de Checkout, Pedidos, Pagamentos, Frete e Relatórios em seções
+     * próprias, com o padrão de projeto principal de cada uma (T041).</p>
+     * <p>Papel no Design Pattern: Método auxiliar privado de documentação da fronteira REST do Módulo 3.</p>
+     *
+     * @return lista de tags do Módulo 3
+     */
+    private List<Tag> criarTagsModulo3() {
+        return List.of(
+            new Tag().name("Checkout").description("Módulo 3 — Fechamento de compra (Facade + Template Method)"),
+            new Tag().name("Pedidos").description("Módulo 3 — Consulta, cancelamento e expedição (State + Mediator)"),
+            new Tag().name("Pagamentos").description(
+                "Módulo 3 — Webhook idempotente (Adapter + Abstract Factory). Header X-Gateway-Token obrigatório"),
+            new Tag().name("Frete").description("Módulo 3 — Cotação de frete (Adapter/ACL) e frete grátis"),
+            new Tag().name("Relatórios").description("Módulo 3 — Relatórios gerenciais (somente ADMIN)")
+        );
     }
 
     /**
@@ -95,7 +118,12 @@ public class ConfiguracaoOpenApiSwagger {
                 + "Flyweight (Atributos de Variação), Builder (Produto, ComboKit, Cliente e Endereço), "
                 + "Factory Method, Static Factory Method, Proxy (Proteção RBAC e Auditoria Imutável), "
                 + "Singleton e Null Object (Endereço e Categoria Raiz).\n\n"
-                + "**Credencial Inicial (Botão Authorize)**: `admin@ecommerce.fatec.edu.br` / `AdminFatec@2026`"
+                + "**Credencial Inicial (Botão Authorize)**: `admin@ecommerce.fatec.edu.br` / `AdminFatec@2026`\n\n"
+                + "**Módulo 3 (Integrante 3 — Henrique Sandrini)**: Checkout, Pedidos, Pagamentos idempotentes, Frete, "
+                + "Eventos e Relatórios. Padrões: Facade, Template Method/Hook, State, Adapter/ACL, Abstract Factory, "
+                + "Service Locator, Observer, Mediator e Builder. Cliente de demonstração: "
+                + "`cliente.demo@ecommerce.fatec.edu.br` / `ClienteFatec@2026`. Webhook de pagamento: header "
+                + "`X-Gateway-Token: gateway-simulado-fatec`."
             )
             .contact(new Contact().name("FATEC — Equipe E-commerce Promoções Avançadas — Módulo 1"));
     }

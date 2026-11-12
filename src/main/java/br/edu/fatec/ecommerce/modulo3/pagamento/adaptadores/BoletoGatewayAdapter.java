@@ -2,37 +2,57 @@ package br.edu.fatec.ecommerce.modulo3.pagamento.adaptadores;
 
 import br.edu.fatec.ecommerce.modulo3.pagamento.adaptadores.dto.RequisicaoCobrancaDTO;
 import br.edu.fatec.ecommerce.modulo3.pagamento.adaptadores.dto.RespostaPagamentoDTO;
-import br.edu.fatec.ecommerce.modulo3.pagamento.dominio.MetodoPagamento;
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
- * Adaptador simulado para pagamentos via boleto bancário.
+ * Adaptador do emissor de boletos bancários (simulado).
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Concrete Adapter do padrão <b>Adapter</b> / Camada Anticorrupção (ACL).
- * Gera linha digitável e código de barras padrão FEBRABAN simulados.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> <i>Concrete Adapter</i>. Gera a linha digitável com o valor
+ * codificado e vencimento em 3 dias; a liquidação chega depois pelo webhook.
  *
  * @author Henrique Sandrini (Integrante 3)
  */
 @Component
 public class BoletoGatewayAdapter implements GatewayPagamentoPort {
 
-    @Override
-    public boolean suporta(MetodoPagamento metodo) {
-        return metodo == MetodoPagamento.BOLETO;
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(BoletoGatewayAdapter.class);
 
+    /** Prazo de vencimento do boleto. */
+    private static final Duration PRAZO_VENCIMENTO = Duration.ofDays(3);
+
+    /**
+     * Emite o boleto.
+     *
+     * @param requisicao dados da cobrança
+     * @return resposta pendente com linha digitável e vencimento
+     */
     @Override
     public RespostaPagamentoDTO processarCobranca(RequisicaoCobrancaDTO requisicao) {
+        // 1. Identificador do boleto no emissor
         String idGateway = "BOL-GW-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        String linhaDigitavel = "34191.79001 01043.510047 91020.150008 4 99120000052000";
-        return RespostaPagamentoDTO.sucessoBoleto(idGateway, linhaDigitavel);
+        // 2. Valor em centavos com 10 dígitos no final da linha digitável (como no padrão FEBRABAN)
+        long centavos = requisicao.valor().movePointRight(2).longValue();
+        String linhaDigitavel = String.format("34191.79001 01043.510047 91020.150008 4 9912%010d", centavos);
+        return RespostaPagamentoDTO.boletoEmitido(idGateway, linhaDigitavel, Instant.now().plus(PRAZO_VENCIMENTO));
     }
 
+    /**
+     * Simula a devolução de um boleto pago (transferência ao cliente).
+     *
+     * @param identificadorGateway boleto original
+     * @param valor valor devolvido
+     * @return protocolo da devolução
+     */
     @Override
-    public void solicitarEstorno(String identificadorGateway, BigDecimal valor) {
-        // Simulação de estorno/cancelamento de boleto bancário
+    public String solicitarEstorno(String identificadorGateway, BigDecimal valor) {
+        String protocolo = "BOL-DEV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        LOG.info("[BOLETO] Devolução de R$ {} do boleto {} solicitada (protocolo {}).", valor, identificadorGateway, protocolo);
+        return protocolo;
     }
 }

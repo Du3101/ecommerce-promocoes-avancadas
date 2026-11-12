@@ -1,42 +1,68 @@
 package br.edu.fatec.ecommerce.modulo3.frete.adaptadores;
 
+import br.edu.fatec.ecommerce.modulo3.frete.adaptadores.externo.ApiTransportadoraExpressaSimulada;
 import br.edu.fatec.ecommerce.modulo3.frete.dominio.CotacaoFrete;
 import br.edu.fatec.ecommerce.modulo3.frete.dominio.ModalidadeFrete;
+import br.edu.fatec.ecommerce.modulo3.frete.dominio.RegiaoEntrega;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import org.springframework.stereotype.Component;
 
 /**
- * Adaptador simulado para transporte rodoviário expresso privado.
+ * Adaptador da transportadora privada expressa.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Concrete Adapter do padrão <b>Adapter</b>.
+ * <p><b>Papel Arquitetural no Design Pattern:</b> <i>Concrete Adapter</i> / Anti-Corruption Layer. Traduz um
+ * contrato bem diferente do dos Correios: preço em centavos ({@code long}) e prazo em horas, que viram
+ * {@link BigDecimal} em reais e dias úteis no modelo interno.
  *
  * @author Henrique Sandrini (Integrante 3)
  */
 @Component
 public class TransportadoraExpressaAdapter implements CalculadoraFretePort {
 
-    @Override
-    public boolean suporta(ModalidadeFrete modalidade) {
-        return modalidade == ModalidadeFrete.TRANSPORTADORA_EXPRESSA;
+    private static final String CEP_ORIGEM_CENTRO_DISTRIBUICAO = "01310100";
+
+    private final ApiTransportadoraExpressaSimulada api;
+
+    /**
+     * Construtor com a API externa injetada.
+     *
+     * @param api cliente da API da transportadora (Adaptee)
+     */
+    public TransportadoraExpressaAdapter(ApiTransportadoraExpressaSimulada api) {
+        this.api = api;
     }
 
+    /**
+     * Modalidade atendida.
+     *
+     * @return {@link ModalidadeFrete#TRANSPORTADORA_EXPRESSA}
+     */
     @Override
-    public CotacaoFrete calcularFrete(String cepDestino, int pesoTotalGramas, BigDecimal subtotalLiquido) {
-        BigDecimal base = new BigDecimal("45.00");
-        BigDecimal adicionalPeso = BigDecimal.valueOf(Math.max(0, pesoTotalGramas))
-                .multiply(new BigDecimal("0.01"))
-                .setScale(2, RoundingMode.HALF_EVEN);
-        BigDecimal valorOriginal = base.add(adicionalPeso).setScale(2, RoundingMode.HALF_EVEN);
+    public ModalidadeFrete modalidade() {
+        return ModalidadeFrete.TRANSPORTADORA_EXPRESSA;
+    }
 
-        return new CotacaoFrete(
-                ModalidadeFrete.TRANSPORTADORA_EXPRESSA,
-                ModalidadeFrete.TRANSPORTADORA_EXPRESSA.getTransportadora(),
-                valorOriginal,
-                valorOriginal,
-                false,
-                1
-        );
+    /**
+     * Traduz a cotação da transportadora para o modelo interno.
+     *
+     * <p>Papel no Design Pattern: método adaptado ({@code request()} do Target → {@code specificRequest()} do Adaptee).</p>
+     *
+     * @param cepDestino CEP de destino
+     * @param pesoTotalGramas peso total em gramas
+     * @return cotação no modelo interno
+     */
+    @Override
+    public CotacaoFrete cotar(String cepDestino, int pesoTotalGramas) {
+        // 1. Monta o pedido no formato da transportadora
+        ApiTransportadoraExpressaSimulada.PedidoCotacao pedido = new ApiTransportadoraExpressaSimulada.PedidoCotacao(
+                CEP_ORIGEM_CENTRO_DISTRIBUICAO, RegiaoEntrega.normalizarCep(cepDestino), Math.max(0, pesoTotalGramas));
+
+        // 2. Chama o sistema externo
+        ApiTransportadoraExpressaSimulada.RespostaCotacao resposta = api.cotar(pedido);
+
+        // 3. Traduz centavos -> reais e horas -> dias úteis (arredondando para cima)
+        BigDecimal valorReais = BigDecimal.valueOf(resposta.precoCentavos()).movePointLeft(2);
+        int prazoDias = (resposta.prazoHoras() + 23) / 24;
+        return CotacaoFrete.semBeneficio(modalidade(), valorReais, prazoDias);
     }
 }

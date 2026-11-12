@@ -2,34 +2,34 @@ package br.edu.fatec.ecommerce.modulo3.frete.adaptadores;
 
 import br.edu.fatec.ecommerce.modulo3.frete.dominio.CotacaoFrete;
 import br.edu.fatec.ecommerce.modulo3.frete.dominio.ModalidadeFrete;
-import java.math.BigDecimal;
 
 /**
- * Porta de integração logística (Interface de Adaptação) para cotações de frete.
+ * Porta interna de cotação de frete.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * Interface <i>Target</i> do padrão <b>Adapter</b> (GoF Adapter). Define o contrato unificado
- * para comunicação com os provedores simulados de entrega (Correios PAC, SEDEX e Transportadora).
+ * <p><b>Papel Arquitetural no Design Pattern:</b> interface <i>Target</i> do padrão <b>Adapter</b>. O domínio só
+ * conhece este contrato; cada transportadora tem um adaptador que traduz sua API proprietária para ele
+ * (Anti-Corruption Layer).
+ *
+ * <p><b>Guia de extensão:</b> nova transportadora = nova constante em {@link ModalidadeFrete} + nova classe
+ * {@code @Component} implementando esta interface. O {@code ServicoCalculoFrete} a descobre por injeção.
  *
  * @author Henrique Sandrini (Integrante 3)
  */
 public interface CalculadoraFretePort {
 
     /**
-     * Verifica se este adaptador suporta a modalidade solicitada.
+     * Modalidade atendida por este adaptador.
      *
-     * @param modalidade Modalidade de frete a verificar.
-     * @return {@code true} se o adaptador processa a modalidade.
+     * @return modalidade de frete
      */
-    boolean suporta(ModalidadeFrete modalidade);
+    ModalidadeFrete modalidade();
 
     /**
-     * Executa a cotação de valor e prazo de entrega.
+     * Cota a entrega já traduzida para o modelo interno, sem aplicar benefícios comerciais.
      *
-     * @param cepDestino CEP de 8 dígitos numéricos.
-     * @param pesoTotalGramas Peso acumulado em gramas.
-     * @param subtotalLiquido Subtotal líquido dos itens para análise de frete grátis.
-     * @return Cotação calculada.
+     * @param cepDestino CEP de destino (8 dígitos, com ou sem máscara)
+     * @param pesoTotalGramas peso total em gramas
+     * @return cotação no modelo interno ({@link CotacaoFrete})
      */
-    CotacaoFrete calcularFrete(String cepDestino, int pesoTotalGramas, BigDecimal subtotalLiquido);
+    CotacaoFrete cotar(String cepDestino, int pesoTotalGramas);
 }

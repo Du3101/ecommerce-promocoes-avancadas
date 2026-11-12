@@ -19,5 +19,8 @@ logging:
 ecommerce:
   modulo1:
     seed-demo-ativo: false
+  modulo3:
+    seed-demo-ativo: false
+    webhook-token: token-teste-gateway
 
 

@@ -1,125 +1,114 @@
 package br.edu.fatec.ecommerce.modulo3.checkout.api.dto;
 
+import br.edu.fatec.ecommerce.modulo3.pagamento.adaptadores.dto.RespostaPagamentoDTO;
 import br.edu.fatec.ecommerce.modulo3.pagamento.dominio.MetodoPagamento;
+import br.edu.fatec.ecommerce.modulo3.pagamento.dominio.TransacaoPagamento;
+import br.edu.fatec.ecommerce.modulo3.pedido.api.dto.PedidoResponseDTO;
+import br.edu.fatec.ecommerce.modulo3.pedido.dominio.Pedido;
 import br.edu.fatec.ecommerce.modulo3.pedido.dominio.StatusPedido;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * DTO de resposta emitido após a criação e processamento inicial bem-sucedido do checkout.
+ * Resposta do checkout ({@code 201 Created}), no formato do contrato da API.
  *
- * <p><b>Papel Arquitetural no Design Pattern:</b>
- * DTO de retorno da fachada {@code CheckoutFacade} expondo a confirmação e o resumo imutável.
+ * @param pedidoId UUID do pedido
+ * @param numeroPedido número comercial
+ * @param status status após o checkout ({@code AGUARDANDO_PAGAMENTO}, {@code PAGO} ou {@code PAGAMENTO_RECUSADO})
+ * @param metodoPagamento método escolhido
+ * @param dadosPagamento dados para o cliente pagar (chave PIX, boleto) ou resultado do cartão
+ * @param snapshotFinanceiro memória de cálculo congelada
+ * @param entrega dados de entrega congelados
+ * @param itens linhas congeladas
+ * @param cupomUtilizado cupom aplicado
+ * @param promocoesAplicadas promoções que deram desconto
+ * @param reaproveitado {@code true} se o checkout foi repetido com a mesma chave e o pedido existente foi devolvido
+ * @param criadoEm instante de criação
  *
  * @author Henrique Sandrini (Integrante 3)
  */
-public class CheckoutResponseDTO {
+public record CheckoutResponseDTO(
+        UUID pedidoId,
+        String numeroPedido,
+        StatusPedido status,
+        MetodoPagamento metodoPagamento,
+        DadosPagamentoDTO dadosPagamento,
+        PedidoResponseDTO.SnapshotFinanceiroDTO snapshotFinanceiro,
+        PedidoResponseDTO.EntregaDTO entrega,
+        List<PedidoResponseDTO.ItemPedidoDTO> itens,
+        String cupomUtilizado,
+        List<String> promocoesAplicadas,
+        boolean reaproveitado,
+        Instant criadoEm
+) {
 
-    private UUID pedidoId;
-    private String numeroPedido;
-    private StatusPedido status;
-    private MetodoPagamento metodoPagamento;
-    private String chavePixCopiaECola;
-    private String qrCodeBase64;
-    private String linhaDigitavelBoleto;
-    private String identificadorTransacao;
-    private BigDecimal subtotalBruto;
-    private BigDecimal totalDescontos;
-    private BigDecimal valorFrete;
-    private boolean freteGratis;
-    private BigDecimal valorTotalLiquido;
-    private String modalidadeFrete;
-    private int prazoEntregaDias;
-    private String enderecoDestinoFormatado;
-    private List<ItemResumoDTO> itens;
-    private Instant criadoEm;
-
-    public CheckoutResponseDTO() {
+    /**
+     * Dados de pagamento devolvidos ao cliente.
+     *
+     * @param identificadorTransacao identificador no gateway
+     * @param statusTransacao status da transação
+     * @param comprovante chave PIX copia-e-cola, linha digitável ou mensagem do cartão
+     * @param qrCodeBase64 QR Code PIX (somente na primeira resposta)
+     * @param expiraEm validade da cobrança (PIX/boleto)
+     * @param instrucoes instruções formatadas pela família de pagamento
+     */
+    public record DadosPagamentoDTO(String identificadorTransacao, String statusTransacao, String comprovante,
+                                    String qrCodeBase64, Instant expiraEm, String instrucoes) {
     }
 
-    public static class ItemResumoDTO {
-        private String sku;
-        private String nome;
-        private int quantidade;
-        private BigDecimal precoUnitarioTabela;
-        private BigDecimal descontoUnitario;
-        private BigDecimal subtotalLiquido;
-
-        public ItemResumoDTO() {
-        }
-
-        public ItemResumoDTO(String sku, String nome, int quantidade, BigDecimal precoUnitarioTabela, BigDecimal descontoUnitario, BigDecimal subtotalLiquido) {
-            this.sku = sku;
-            this.nome = nome;
-            this.quantidade = quantidade;
-            this.precoUnitarioTabela = precoUnitarioTabela;
-            this.descontoUnitario = descontoUnitario;
-            this.subtotalLiquido = subtotalLiquido;
-        }
-
-        public String getSku() { return sku; }
-        public String getNome() { return nome; }
-        public int getQuantidade() { return quantidade; }
-        public BigDecimal getPrecoUnitarioTabela() { return precoUnitarioTabela; }
-        public BigDecimal getDescontoUnitario() { return descontoUnitario; }
-        public BigDecimal getSubtotalLiquido() { return subtotalLiquido; }
+    /**
+     * Monta a resposta de um checkout recém-processado.
+     *
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> de mapeamento.</p>
+     *
+     * @param pedido pedido criado
+     * @param resposta resposta do gateway
+     * @param instrucoes instruções de pagamento formatadas
+     * @return DTO de saída
+     */
+    public static CheckoutResponseDTO novo(Pedido pedido, RespostaPagamentoDTO resposta, String instrucoes) {
+        DadosPagamentoDTO dados = new DadosPagamentoDTO(resposta.identificadorGateway(),
+                resposta.statusTransacao().name(), resposta.comprovante(), resposta.qrCodeBase64(),
+                resposta.expiraEm(), instrucoes);
+        return montar(pedido, dados, false);
     }
 
-    // --- Getters e Setters ---
+    /**
+     * Monta a resposta de um checkout repetido (mesma chave de idempotência).
+     *
+     * @param pedido pedido existente
+     * @param transacao transação existente (pode ser nula)
+     * @return DTO de saída marcado como reaproveitado
+     */
+    public static CheckoutResponseDTO existente(Pedido pedido, TransacaoPagamento transacao) {
+        DadosPagamentoDTO dados = transacao == null ? null : new DadosPagamentoDTO(transacao.getIdentificadorGateway(),
+                transacao.getStatus().name(), transacao.getComprovanteOuQrCode(), null, null,
+                "Pedido já registrado anteriormente com esta chave de idempotência.");
+        return montar(pedido, dados, true);
+    }
 
-    public UUID getPedidoId() { return pedidoId; }
-    public void setPedidoId(UUID pedidoId) { this.pedidoId = pedidoId; }
-
-    public String getNumeroPedido() { return numeroPedido; }
-    public void setNumeroPedido(String numeroPedido) { this.numeroPedido = numeroPedido; }
-
-    public StatusPedido getStatus() { return status; }
-    public void setStatus(StatusPedido status) { this.status = status; }
-
-    public MetodoPagamento getMetodoPagamento() { return metodoPagamento; }
-    public void setMetodoPagamento(MetodoPagamento metodoPagamento) { this.metodoPagamento = metodoPagamento; }
-
-    public String getChavePixCopiaECola() { return chavePixCopiaECola; }
-    public void setChavePixCopiaECola(String chavePixCopiaECola) { this.chavePixCopiaECola = chavePixCopiaECola; }
-
-    public String getQrCodeBase64() { return qrCodeBase64; }
-    public void setQrCodeBase64(String qrCodeBase64) { this.qrCodeBase64 = qrCodeBase64; }
-
-    public String getLinhaDigitavelBoleto() { return linhaDigitavelBoleto; }
-    public void setLinhaDigitavelBoleto(String linhaDigitavelBoleto) { this.linhaDigitavelBoleto = linhaDigitavelBoleto; }
-
-    public String getIdentificadorTransacao() { return identificadorTransacao; }
-    public void setIdentificadorTransacao(String identificadorTransacao) { this.identificadorTransacao = identificadorTransacao; }
-
-    public BigDecimal getSubtotalBruto() { return subtotalBruto; }
-    public void setSubtotalBruto(BigDecimal subtotalBruto) { this.subtotalBruto = subtotalBruto; }
-
-    public BigDecimal getTotalDescontos() { return totalDescontos; }
-    public void setTotalDescontos(BigDecimal totalDescontos) { this.totalDescontos = totalDescontos; }
-
-    public BigDecimal getValorFrete() { return valorFrete; }
-    public void setValorFrete(BigDecimal valorFrete) { this.valorFrete = valorFrete; }
-
-    public boolean isFreteGratis() { return freteGratis; }
-    public void setFreteGratis(boolean freteGratis) { this.freteGratis = freteGratis; }
-
-    public BigDecimal getValorTotalLiquido() { return valorTotalLiquido; }
-    public void setValorTotalLiquido(BigDecimal valorTotalLiquido) { this.valorTotalLiquido = valorTotalLiquido; }
-
-    public String getModalidadeFrete() { return modalidadeFrete; }
-    public void setModalidadeFrete(String modalidadeFrete) { this.modalidadeFrete = modalidadeFrete; }
-
-    public int getPrazoEntregaDias() { return prazoEntregaDias; }
-    public void setPrazoEntregaDias(int prazoEntregaDias) { this.prazoEntregaDias = prazoEntregaDias; }
-
-    public String getEnderecoDestinoFormatado() { return enderecoDestinoFormatado; }
-    public void setEnderecoDestinoFormatado(String enderecoDestinoFormatado) { this.enderecoDestinoFormatado = enderecoDestinoFormatado; }
-
-    public List<ItemResumoDTO> getItens() { return itens; }
-    public void setItens(List<ItemResumoDTO> itens) { this.itens = itens; }
-
-    public Instant getCriadoEm() { return criadoEm; }
-    public void setCriadoEm(Instant criadoEm) { this.criadoEm = criadoEm; }
+    /**
+     * Monta o DTO a partir do pedido e dos dados de pagamento.
+     *
+     * @param pedido pedido
+     * @param dados dados de pagamento
+     * @param reaproveitado se é repetição
+     * @return DTO de saída
+     */
+    private static CheckoutResponseDTO montar(Pedido pedido, DadosPagamentoDTO dados, boolean reaproveitado) {
+        return new CheckoutResponseDTO(
+                pedido.getId(),
+                pedido.getNumeroPedido(),
+                pedido.getStatus(),
+                pedido.getMetodoPagamento(),
+                dados,
+                PedidoResponseDTO.SnapshotFinanceiroDTO.de(pedido.getFinanceiro()),
+                PedidoResponseDTO.EntregaDTO.de(pedido),
+                pedido.getItens().stream().map(PedidoResponseDTO.ItemPedidoDTO::de).toList(),
+                pedido.getCupomUtilizado(),
+                pedido.getPromocoesAplicadas(),
+                reaproveitado,
+                pedido.getCriadoEm());
+    }
 }
