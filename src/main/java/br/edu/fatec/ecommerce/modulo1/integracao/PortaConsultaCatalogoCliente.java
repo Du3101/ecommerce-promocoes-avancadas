@@ -1,5 +1,6 @@
 package br.edu.fatec.ecommerce.modulo1.integracao;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -47,5 +48,34 @@ public interface PortaConsultaCatalogoCliente {
      * @return DTO {@link VisaoClienteElegibilidadeDTO}
      */
     VisaoClienteElegibilidadeDTO consultarClienteParaCompra(UUID clienteId);
+
+    /**
+     * Resolve o identificador real do perfil {@code Cliente} a partir do e-mail do usuário autenticado.
+     *
+     * <p>Objetivo Funcional: O Módulo 3 recebe apenas o e-mail do usuário logado (Spring Security) e precisa
+     * do {@code clienteId} persistido para consultar elegibilidade, reservar estoque e gravar o pedido
+     * (a tabela {@code pedidos} referencia {@code clientes(id)}).</p>
+     * <p>Papel no Design Pattern: Porta de fronteira (Anti-Corruption) que esconde do Módulo 3 as entidades
+     * {@code Usuario} e {@code Cliente} do Módulo 1.</p>
+     *
+     * @param emailUsuario e-mail (username) do usuário autenticado
+     * @return UUID do perfil de cliente vinculado ao usuário
+     * @throws br.edu.fatec.ecommerce.compartilhado.excecao.RecursoNaoEncontradoException
+     *         se o usuário não existir ou não possuir perfil de cliente
+     */
+    UUID resolverClienteIdPorEmailUsuario(String emailUsuario);
+
+    /**
+     * Retorna o endereço de entrega selecionado do cliente com todos os campos necessários ao snapshot do pedido.
+     *
+     * <p>Objetivo Funcional: Fornecer ao Módulo 3 logradouro, número, complemento, bairro, cidade, UF e CEP
+     * para congelar o endereço no pedido (Princípio IV — Snapshot Comercial Imutável).</p>
+     * <p>Papel no Design Pattern: Porta de fronteira que traduz o {@code EnderecoAusenteNullObject} do
+     * Módulo 1 em {@link Optional#empty()}, sem expor a entidade {@code Endereco}.</p>
+     *
+     * @param clienteId UUID do cliente
+     * @return endereço completo selecionado, ou {@link Optional#empty()} se não houver endereço válido selecionado
+     */
+    Optional<VisaoEnderecoEntregaDTO> consultarEnderecoEntregaSelecionado(UUID clienteId);
 }
 

@@ -22,6 +22,8 @@ import java.util.UUID;
  * @param totalLiquido Valor final líquido comercial do pedido (com piso zero).
  * @param cupomUtilizado Código do cupom aplicado (ou null se nenhum).
  * @param nomesPromocoesAplicadas Lista dos nomes das campanhas que concederam desconto.
+ * @param itens Linhas do carrinho (SKU, nome, tipo, preço unitário, quantidade e peso) para o snapshot do pedido
+ *              no Módulo 3 (adicionado na integração com o Módulo 3 — Henrique Sandrini).
  *
  * @author Eduardo Juncker Toras (Integrante 2)
  */
@@ -35,7 +37,20 @@ public record ResumoCarrinhoCheckoutDTO(
         BigDecimal totalDescontos,
         BigDecimal totalLiquido,
         String cupomUtilizado,
-        List<String> nomesPromocoesAplicadas
+        List<String> nomesPromocoesAplicadas,
+        List<ItemResumoCarrinhoDTO> itens
 ) {
+
+    /**
+     * Indica se o carrinho não possui nenhum item.
+     *
+     * <p>Objetivo Funcional: Permitir ao checkout rejeitar o fechamento de um carrinho vazio.</p>
+     * <p>Papel no Design Pattern: Predicado de conveniência do DTO de fronteira.</p>
+     *
+     * @return {@code true} se não houver itens no carrinho
+     */
+    public boolean estaVazio() {
+        return itens == null || itens.isEmpty();
+    }
 }
 

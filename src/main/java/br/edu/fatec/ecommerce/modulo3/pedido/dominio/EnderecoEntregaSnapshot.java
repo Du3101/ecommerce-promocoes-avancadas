@@ -1,5 +1,6 @@
 package br.edu.fatec.ecommerce.modulo3.pedido.dominio;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.util.Objects;
 
@@ -16,13 +17,28 @@ import java.util.Objects;
 @Embeddable
 public class EnderecoEntregaSnapshot {
 
+    @Column(name = "endereco_apelido", length = 60)
     private String enderecoApelido;
+
+    @Column(name = "endereco_cep", nullable = false, length = 8)
     private String enderecoCep;
+
+    @Column(name = "endereco_logradouro", nullable = false, length = 180)
     private String enderecoLogradouro;
+
+    @Column(name = "endereco_numero", nullable = false, length = 30)
     private String enderecoNumero;
+
+    @Column(name = "endereco_complemento", length = 100)
     private String enderecoComplemento;
+
+    @Column(name = "endereco_bairro", nullable = false, length = 100)
     private String enderecoBairro;
+
+    @Column(name = "endereco_cidade", nullable = false, length = 100)
     private String enderecoCidade;
+
+    @Column(name = "endereco_uf", nullable = false, length = 2)
     private String enderecoUf;
 
     /**

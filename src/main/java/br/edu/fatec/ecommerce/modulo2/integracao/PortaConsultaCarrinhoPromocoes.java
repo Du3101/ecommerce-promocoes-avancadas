@@ -39,5 +39,20 @@ public interface PortaConsultaCarrinhoPromocoes {
      * @param codigoCupom Código do cupom utilizado.
      */
     void confirmarConsumoDeCupom(String codigoCupom);
+
+    /**
+     * Resolve o identificador de dono de carrinho usado pelo Módulo 2 para um usuário autenticado.
+     *
+     * <p>Objetivo Funcional: O carrinho de um usuário logado é indexado por um UUID derivado do seu e-mail
+     * (regra interna do Módulo 2). O Módulo 3 recebe apenas o e-mail do Spring Security e usa este método
+     * para obter a chave correta antes de chamar {@link #obterResumoCarrinhoParaCheckout(UUID, String)} e
+     * {@link #esvaziarCarrinhoAposCheckout(UUID, String)}, sem replicar a regra de derivação.</p>
+     * <p>Papel no Design Pattern: Porta de fronteira (Anti-Corruption) que encapsula a política de
+     * identificação de carrinhos do Módulo 2.</p>
+     *
+     * @param emailUsuario e-mail do usuário autenticado.
+     * @return UUID usado como {@code clienteId} do carrinho no Módulo 2.
+     */
+    UUID resolverIdentificadorCarrinhoPorEmail(String emailUsuario);
 }
 

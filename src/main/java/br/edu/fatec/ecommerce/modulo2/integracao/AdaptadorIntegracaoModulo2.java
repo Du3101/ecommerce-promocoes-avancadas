@@ -2,13 +2,16 @@ package br.edu.fatec.ecommerce.modulo2.integracao;
 
 import br.edu.fatec.ecommerce.modulo2.carrinho.aplicacao.ServicoCarrinhoCompras;
 import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.CarrinhoCompras;
+import br.edu.fatec.ecommerce.modulo1.identidade.dominio.ContextoSegurancaUsuario;
 import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.ItemCarrinho;
+import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.ItemCarrinhoComboKit;
 import br.edu.fatec.ecommerce.modulo2.cupons.aplicacao.ServicoCuponsPromocionais;
 import br.edu.fatec.ecommerce.modulo2.precificacao.aplicacao.PipelineFormacaoPrecoService;
 import br.edu.fatec.ecommerce.modulo2.precificacao.dominio.MemoriaCalculoPrecoVO;
 import br.edu.fatec.ecommerce.modulo2.precificacao.dominio.ParcelaDescontoVO;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +51,18 @@ public class AdaptadorIntegracaoModulo2 implements PortaConsultaCarrinhoPromocoe
         MemoriaCalculoPrecoVO memoria = pipelinePreco.calcularPrecoCarrinho(carrinho, null);
 
         Map<String, Integer> quantidadePorSku = new LinkedHashMap<>();
+        List<ItemResumoCarrinhoDTO> itens = new ArrayList<>();
         for (ItemCarrinho item : carrinho.getItens()) {
             quantidadePorSku.put(item.getSku(), item.getQuantidade());
+            // Linha detalhada para o snapshot imutável do pedido no Módulo 3
+            itens.add(new ItemResumoCarrinhoDTO(
+                    item.getSku(),
+                    item.getNome(),
+                    item instanceof ItemCarrinhoComboKit ? "COMBO_KIT" : "PRODUTO",
+                    item.getPrecoUnitario(),
+                    item.getQuantidade(),
+                    item.calcularPesoTotalLinhaGramas()
+            ));
         }
 
         List<String> promocoesAplicadas = memoria.descontosDiscriminados().stream()
@@ -67,7 +80,8 @@ public class AdaptadorIntegracaoModulo2 implements PortaConsultaCarrinhoPromocoe
                 memoria.totalDescontos(),
                 memoria.totalLiquido(),
                 carrinho.getCupomCodigo(),
-                promocoesAplicadas
+                promocoesAplicadas,
+                List.copyOf(itens)
         );
     }
 
@@ -79,6 +93,21 @@ public class AdaptadorIntegracaoModulo2 implements PortaConsultaCarrinhoPromocoe
     @Override
     public void confirmarConsumoDeCupom(String codigoCupom) {
         servicoCupons.registrarUsoEfetivo(codigoCupom);
+    }
+
+    /**
+     * Resolve o identificador de dono de carrinho para um usuário autenticado.
+     *
+     * <p>Objetivo Funcional: Reaproveitar exatamente a mesma regra usada pelo {@code CarrinhoComprasController}
+     * (UUID determinístico derivado do e-mail), garantindo que o Módulo 3 leia o mesmo carrinho que o cliente montou.</p>
+     * <p>Papel no Design Pattern: Método adaptado da porta (Anti-Corruption Layer entre Módulos 2 e 3).</p>
+     *
+     * @param emailUsuario e-mail do usuário autenticado.
+     * @return UUID usado como chave do carrinho no Módulo 2.
+     */
+    @Override
+    public UUID resolverIdentificadorCarrinhoPorEmail(String emailUsuario) {
+        return ContextoSegurancaUsuario.derivarUuidDeterministicoPorEmail(emailUsuario);
     }
 }
 

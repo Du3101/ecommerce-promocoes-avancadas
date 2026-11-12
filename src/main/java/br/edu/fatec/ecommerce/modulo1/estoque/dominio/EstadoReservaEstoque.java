@@ -8,6 +8,8 @@ package br.edu.fatec.ecommerce.modulo1.estoque.dominio;
  *   <li>{@code ATIVA -> CONFIRMADA} (baixa definitiva após pagamento aprovado; idempotente se já {@code CONFIRMADA})</li>
  *   <li>{@code ATIVA -> LIBERADA} (devolução ao disponível por cancelamento/recusa; idempotente se já {@code LIBERADA} ou {@code EXPIRADA})</li>
  *   <li>{@code ATIVA -> EXPIRADA} (devolução automática ao disponível por vencimento de TTL)</li>
+ *   <li>{@code CONFIRMADA -> ESTORNADA_POS_BAIXA} (devolução ao disponível quando um pedido já pago é cancelado
+ *       antes do envio — integração com o Módulo 3; idempotente se já {@code ESTORNADA_POS_BAIXA})</li>
  * </ul>
  */
 public enum EstadoReservaEstoque {
@@ -22,6 +24,12 @@ public enum EstadoReservaEstoque {
     LIBERADA,
 
     /** Reserva vencida por decurso do tempo limite (TTL), com saldo devolvido ao estoque disponível. */
-    EXPIRADA
+    EXPIRADA,
+
+    /**
+     * Baixa definitiva desfeita: o pedido já pago foi cancelado antes do envio (Módulo 3) e as unidades
+     * que haviam saído do estoque voltaram ao saldo disponível.
+     */
+    ESTORNADA_POS_BAIXA
 }
 

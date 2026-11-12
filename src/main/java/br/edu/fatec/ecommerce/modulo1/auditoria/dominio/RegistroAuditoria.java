@@ -300,6 +300,42 @@ public class RegistroAuditoria {
     }
 
     /**
+     * Cria um registro imutável de auditoria para o cancelamento de um pedido (Módulo 3).
+     *
+     * <p>Objetivo Funcional: Cumprir o Princípio V da Constituição — cancelamentos de pedidos são operações
+     * comerciais sensíveis e precisam identificar o responsável, o pedido, o estado anterior e o instante.</p>
+     * <p>Papel no Design Pattern: <b>Static Factory Method</b> especializado, invocado pela porta
+     * {@code PortaRegistroAuditoria} a partir do Módulo 3.</p>
+     *
+     * @param usuarioId ID do usuário que solicitou o cancelamento
+     * @param email e-mail do solicitante
+     * @param perfil perfil do solicitante (cliente ou administrador)
+     * @param numeroPedido número comercial do pedido cancelado
+     * @param estadoAnterior estado do pedido antes do cancelamento
+     * @param resumoNovo descrição do resultado (estado final, motivo, compensações)
+     * @return instância imutável de {@link RegistroAuditoria}
+     */
+    public static RegistroAuditoria registrarCancelamentoPedido(
+        UUID usuarioId,
+        String email,
+        PerfilUsuario perfil,
+        String numeroPedido,
+        String estadoAnterior,
+        String resumoNovo
+    ) {
+        return new RegistroAuditoria(
+            usuarioId,
+            email,
+            perfil,
+            TipoOperacaoAuditoria.CANCELAMENTO_PEDIDO_ADMIN,
+            "Pedido",
+            numeroPedido,
+            "status=" + estadoAnterior,
+            resumoNovo
+        );
+    }
+
+    /**
      * Obtém o identificador único do registro de auditoria.
      *
      * <p>Objetivo Funcional: Identificar univocamente o evento histórico.</p>

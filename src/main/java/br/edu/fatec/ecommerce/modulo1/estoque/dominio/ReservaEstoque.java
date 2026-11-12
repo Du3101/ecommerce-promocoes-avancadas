@@ -180,7 +180,9 @@ public class ReservaEstoque {
         if (this.estado == EstadoReservaEstoque.CONFIRMADA) {
             return false; // Chamada repetida idempotente
         }
-        if (this.estado == EstadoReservaEstoque.LIBERADA || this.estado == EstadoReservaEstoque.EXPIRADA) {
+        if (this.estado == EstadoReservaEstoque.LIBERADA
+            || this.estado == EstadoReservaEstoque.EXPIRADA
+            || this.estado == EstadoReservaEstoque.ESTORNADA_POS_BAIXA) {
             throw new TransicaoEstadoReservaInvalidaException(
                 "Não é possível confirmar a reserva '" + this.chaveOperacaoPedido
                     + "' pois ela já se encontra no estado " + this.estado + "."
@@ -204,8 +206,10 @@ public class ReservaEstoque {
      * @throws TransicaoEstadoReservaInvalidaException se a reserva já estava {@code CONFIRMADA}
      */
     public boolean liberarReserva() {
-        if (this.estado == EstadoReservaEstoque.LIBERADA || this.estado == EstadoReservaEstoque.EXPIRADA) {
-            return false; // Chamada repetida idempotente
+        if (this.estado == EstadoReservaEstoque.LIBERADA
+            || this.estado == EstadoReservaEstoque.EXPIRADA
+            || this.estado == EstadoReservaEstoque.ESTORNADA_POS_BAIXA) {
+            return false; // Chamada repetida idempotente (saldo já devolvido ao disponível)
         }
         if (this.estado == EstadoReservaEstoque.CONFIRMADA) {
             throw new TransicaoEstadoReservaInvalidaException(
@@ -214,6 +218,38 @@ public class ReservaEstoque {
             );
         }
         this.estado = EstadoReservaEstoque.LIBERADA;
+        this.finalizadaEm = Instant.now();
+        return true;
+    }
+
+    /**
+     * Desfaz a baixa definitiva de uma reserva {@code CONFIRMADA}, transicionando-a para
+     * {@link EstadoReservaEstoque#ESTORNADA_POS_BAIXA} de forma idempotente.
+     *
+     * <p>Objetivo Funcional: Quando o Módulo 3 cancela um pedido já pago (antes do envio), as unidades que
+     * saíram do estoque precisam voltar ao saldo disponível. Esta transição marca a reserva para que a
+     * devolução aconteça uma única vez, mesmo que o comando seja repetido.</p>
+     * <p>Papel no Design Pattern: Máquina de estados explícita com proteção de idempotência (mesmo contrato de
+     * {@link #confirmarBaixaDefinitiva()} e {@link #liberarReserva()}).</p>
+     *
+     * @return {@code true} se a transição {@code CONFIRMADA -> ESTORNADA_POS_BAIXA} ocorreu agora;
+     *         {@code false} se já estava {@code ESTORNADA_POS_BAIXA} (idempotência)
+     * @throws TransicaoEstadoReservaInvalidaException se a reserva não estiver {@code CONFIRMADA}
+     */
+    public boolean estornarBaixaDefinitiva() {
+        // 1. Chamada repetida: o saldo já foi devolvido anteriormente (idempotência)
+        if (this.estado == EstadoReservaEstoque.ESTORNADA_POS_BAIXA) {
+            return false;
+        }
+        // 2. Só existe baixa a desfazer se o pagamento tiver sido confirmado
+        if (this.estado != EstadoReservaEstoque.CONFIRMADA) {
+            throw new TransicaoEstadoReservaInvalidaException(
+                "Não é possível estornar a baixa da reserva '" + this.chaveOperacaoPedido
+                    + "' pois ela se encontra no estado " + this.estado + " (esperado: CONFIRMADA)."
+            );
+        }
+        // 3. Transição CONFIRMADA -> ESTORNADA_POS_BAIXA
+        this.estado = EstadoReservaEstoque.ESTORNADA_POS_BAIXA;
         this.finalizadaEm = Instant.now();
         return true;
     }

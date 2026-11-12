@@ -1,5 +1,6 @@
 package br.edu.fatec.ecommerce.modulo3.pedido.dominio;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,10 +18,19 @@ import java.util.Objects;
 @Embeddable
 public class SnapshotFinanceiro {
 
+    @Column(name = "subtotal_bruto", nullable = false, precision = 15, scale = 2)
     private BigDecimal subtotalBruto;
+
+    @Column(name = "total_descontos", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalDescontos;
+
+    @Column(name = "valor_frete", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorFrete;
+
+    @Column(name = "frete_gratis", nullable = false)
     private boolean freteGratis;
+
+    @Column(name = "valor_total_liquido", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorTotalLiquido;
 
     /**
