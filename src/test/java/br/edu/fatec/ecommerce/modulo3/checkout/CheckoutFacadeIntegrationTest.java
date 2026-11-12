@@ -191,6 +191,23 @@ class CheckoutFacadeIntegrationTest extends BaseIntegracaoModulo3Test {
     }
 
     @Test
+    @DisplayName("Regressão: cliente logado adiciona ao carrinho pela API REST do Módulo 2 e finaliza a compra")
+    void clienteLogadoDeveUsarCarrinhoRestEFinalizarCompra() throws Exception {
+        String email = criarClienteComEndereco("rest");
+
+        MvcResult adicao = mockMvc.perform(post("/api/v1/carrinho/itens")
+                .with(user(email).roles("CLIENTE"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sku\":\"" + TECLADO + "\",\"quantidade\":1}")).andReturn();
+        assertEquals(201, adicao.getResponse().getStatus(), adicao.getResponse().getContentAsString());
+
+        JsonNode pedido = checkoutComSucesso(email, "BOLETO", "CORREIOS_SEDEX", null);
+
+        assertEquals("AGUARDANDO_PAGAMENTO", pedido.get("status").asText());
+        assertEquals(TECLADO, pedido.get("itens").get(0).get("sku").asText());
+    }
+
+    @Test
     @DisplayName("Cotação de frete é pública e retorna 3 modalidades")
     void cotacaoDeFreteDeveSerPublica() throws Exception {
         MvcResult resultado = mockMvc.perform(post("/api/v1/frete/calcular")

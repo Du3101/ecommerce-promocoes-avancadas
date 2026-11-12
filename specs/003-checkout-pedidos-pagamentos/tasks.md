@@ -52,14 +52,14 @@ description: "Task list for Módulo 3 — Checkout, Ciclo de Vida de Pedidos, Pa
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Criar testes unitários e de integração JUnit 5 para o checkout (validação de cliente/endereço via Módulo 1, congelamento de itens do Módulo 2, chamada de reserva na `PortaComandoReservaEstoque`, esvaziamento do carrinho e criação do pedido imutável com status inicial) em `src/test/java/br/edu/fatec/ecommerce/modulo3/checkout/CheckoutFacadeIntegrationTest.java`
+- [X] T007 [P] [US1] Criar testes unitários e de integração JUnit 5 para o checkout (validação de cliente/endereço via Módulo 1, congelamento de itens do Módulo 2, chamada de reserva na `PortaComandoReservaEstoque`, esvaziamento do carrinho e criação do pedido imutável com status inicial) em `src/test/java/br/edu/fatec/ecommerce/modulo3/checkout/CheckoutFacadeIntegrationTest.java`
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Implementar DTOs de comando e resposta `CheckoutRequestDTO` e `CheckoutResponseDTO` em `src/main/java/br/edu/fatec/ecommerce/modulo3/checkout/api/dto/CheckoutRequestDTO.java`
-- [ ] T009 [US1] Implementar classe abstrata `[Template Method]` `ProcessadorCheckoutTemplate` definindo o fluxo invariante (`validarClienteEEndereco` -> `obterResumoCarrinho` -> `reservarEstoqueModulo1` -> `processarCobranca` -> `criarESalvarPedido` -> `esvaziarCarrinhoModulo2` -> `publicarEventoCriacao`) com métodos hook para especializações em `src/main/java/br/edu/fatec/ecommerce/modulo3/checkout/aplicacao/ProcessadorCheckoutTemplate.java`
-- [ ] T010 [US1] Implementar fachada `[Facade]` `CheckoutFacade` orquestrando o fechamento de compra em `src/main/java/br/edu/fatec/ecommerce/modulo3/checkout/aplicacao/CheckoutFacade.java`
-- [ ] T011 [P] [US1] Implementar controller REST `CheckoutController` (`POST /api/v1/checkout`) com autenticação do cliente em `src/main/java/br/edu/fatec/ecommerce/modulo3/checkout/api/CheckoutController.java`
+- [X] T008 [P] [US1] Implementar DTOs de comando e resposta `CheckoutRequestDTO` e `CheckoutResponseDTO` em `src/main/java/br/edu/fatec/ecommerce/modulo3/checkout/api/dto/CheckoutRequestDTO.java`
+- [X] T009 [US1] Implementar classe abstrata `[Template Method]` `ProcessadorCheckoutTemplate` definindo o fluxo invariante (`validarClienteEEndereco` -> `obterResumoCarrinho` -> `reservarEstoqueModulo1` -> `processarCobranca` -> `criarESalvarPedido` -> `esvaziarCarrinhoModulo2` -> `publicarEventoCriacao`) com métodos hook para especializações em `src/main/java/br/edu/fatec/ecommerce/modulo3/checkout/aplicacao/ProcessadorCheckoutTemplate.java`
+- [X] T010 [US1] Implementar fachada `[Facade]` `CheckoutFacade` orquestrando o fechamento de compra em `src/main/java/br/edu/fatec/ecommerce/modulo3/checkout/aplicacao/CheckoutFacade.java`
+- [X] T011 [P] [US1] Implementar controller REST `CheckoutController` (`POST /api/v1/checkout`) com autenticação do cliente em `src/main/java/br/edu/fatec/ecommerce/modulo3/checkout/api/CheckoutController.java`
 
 **Checkpoint**: User Story 1 completa e independentemente testável (MVP de Checkout gerando pedidos com snapshot imutável).
 
@@ -71,14 +71,14 @@ description: "Task list for Módulo 3 — Checkout, Ciclo de Vida de Pedidos, Pa
 
 ### Tests for User Story 2
 
-- [ ] T012 [P] [US2] Criar testes JUnit 5 para a máquina de estados (transições válidas completas `CRIADO` -> `AGUARDANDO_PAGAMENTO` -> `PAGO` -> `EM_PREPARACAO` -> `ENVIADO` -> `ENTREGUE` e bloqueio de transições inválidas como cancelar pedido despachado ou pagar pedido cancelado) em `src/test/java/br/edu/fatec/ecommerce/modulo3/pedido/MaquinaEstadosPedidoTest.java`
+- [X] T012 [P] [US2] Criar testes JUnit 5 para a máquina de estados (transições válidas completas `CRIADO` -> `AGUARDANDO_PAGAMENTO` -> `PAGO` -> `EM_PREPARACAO` -> `ENVIADO` -> `ENTREGUE` e bloqueio de transições inválidas como cancelar pedido despachado ou pagar pedido cancelado) em `src/test/java/br/edu/fatec/ecommerce/modulo3/pedido/MaquinaEstadosPedidoTest.java`
 
 ### Implementation for User Story 2
 
-- [ ] T013 [P] [US2] Implementar interface `[State]` `EstadoPedido` e as 8 classes concretas de estado: `PedidoCriadoState`, `PedidoAguardandoPagamentoState`, `PedidoPagoState`, `PedidoEmPreparacaoState`, `PedidoEnviadoState`, `PedidoEntregueState`, `PedidoCanceladoState` e `PedidoPagamentoRecusadoState` em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/dominio/estado/EstadoPedido.java`
-- [ ] T014 [US2] Implementar agregado raiz `Pedido` integrando o padrão `[State]` com persistência de status e métodos semânticos de transição de estado em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/dominio/Pedido.java`
-- [ ] T015 [US2] Implementar `ServicoConsultaPedido` (consulta de pedidos do cliente autenticado e consulta por ID com validação de permissão) em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/aplicacao/ServicoConsultaPedido.java`
-- [ ] T016 [P] [US2] Implementar controllers REST `PedidoClienteController` (`GET /api/v1/pedidos/me`, `GET /api/v1/pedidos/{id}`) e `PedidoAdminController` (`PATCH /api/v1/admin/pedidos/{id}/despachar`, `PATCH /api/v1/admin/pedidos/{id}/entregar`) em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/api/PedidoClienteController.java`
+- [X] T013 [P] [US2] Implementar interface `[State]` `EstadoPedido` e as 8 classes concretas de estado: `PedidoCriadoState`, `PedidoAguardandoPagamentoState`, `PedidoPagoState`, `PedidoEmPreparacaoState`, `PedidoEnviadoState`, `PedidoEntregueState`, `PedidoCanceladoState` e `PedidoPagamentoRecusadoState` em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/dominio/estado/EstadoPedido.java`
+- [X] T014 [US2] Implementar agregado raiz `Pedido` integrando o padrão `[State]` com persistência de status e métodos semânticos de transição de estado em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/dominio/Pedido.java`
+- [X] T015 [US2] Implementar `ServicoConsultaPedido` (consulta de pedidos do cliente autenticado e consulta por ID com validação de permissão) em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/aplicacao/ServicoConsultaPedido.java`
+- [X] T016 [P] [US2] Implementar controllers REST `PedidoClienteController` (`GET /api/v1/pedidos/me`, `GET /api/v1/pedidos/{id}`) e `PedidoAdminController` (`PATCH /api/v1/admin/pedidos/{id}/despachar`, `PATCH /api/v1/admin/pedidos/{id}/entregar`) em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/api/PedidoClienteController.java`
 
 **Checkpoint**: User Story 2 completa e testável (máquina de estados do ciclo de vida funcionando e blindada).
 
@@ -90,16 +90,16 @@ description: "Task list for Módulo 3 — Checkout, Ciclo de Vida de Pedidos, Pa
 
 ### Tests for User Story 3
 
-- [ ] T017 [P] [US3] Criar testes unitários e integrados JUnit 5 para pagamentos e idempotência (autorização via adaptadores, recebimento inicial de confirmação de pagamento com baixa definitiva no Módulo 1, e reenvio repetido da mesma confirmação comprovando resposta idempotente sem duplicidade de efeitos colaterais) em `src/test/java/br/edu/fatec/ecommerce/modulo3/pagamento/PagamentoIdempotenciaIntegrationTest.java`
+- [X] T017 [P] [US3] Criar testes unitários e integrados JUnit 5 para pagamentos e idempotência (autorização via adaptadores, recebimento inicial de confirmação de pagamento com baixa definitiva no Módulo 1, e reenvio repetido da mesma confirmação comprovando resposta idempotente sem duplicidade de efeitos colaterais) em `src/test/java/br/edu/fatec/ecommerce/modulo3/pagamento/PagamentoIdempotenciaIntegrationTest.java`
 
 ### Implementation for User Story 3
 
-- [ ] T018 [P] [US3] Implementar interface `[Adapter / Port]` `GatewayPagamentoPort` e DTOs `RequisicaoCobrancaDTO` e `RespostaPagamentoDTO` em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/adaptadores/GatewayPagamentoPort.java`
-- [ ] T019 [P] [US3] Implementar adaptadores concretos `[Adapter]` `PixGatewayAdapter` (geração de chave copia-e-cola e QR Code), `CartaoCreditoGatewayAdapter` (simulação de autorização online com token) e `BoletoGatewayAdapter` (geração de código de barras e linha digitável) em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/adaptadores/PixGatewayAdapter.java`
-- [ ] T020 [P] [US3] Implementar `[Abstract Factory]` `FabricaGatewayPagamento` e `[Service Locator]` `GatewayPagamentoServiceLocator` resolvendo o adaptador correto por `MetodoPagamento` em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/fabrica/GatewayPagamentoServiceLocator.java`
-- [ ] T021 [US3] Implementar entidade `RegistroIdempotenciaPagamento` e serviço `ServicoIdempotenciaPagamento` garantindo controle transacional e retorno cacheado para repetições em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/aplicacao/ServicoIdempotenciaPagamento.java`
-- [ ] T022 [US3] Implementar `ServicoProcessamentoPagamento` coordenando a transição do pedido para `PAGO`, a confirmação de baixa definitiva no Módulo 1 (`PortaComandoReservaEstoque.confirmarBaixaDefinitiva`), o consumo do cupom no Módulo 2 e o disparo de eventos em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/aplicacao/ServicoProcessamentoPagamento.java`
-- [ ] T023 [P] [US3] Implementar controller REST `WebhookPagamentoController` (`POST /api/v1/pagamentos/confirmacao`) com validação de idempotência em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/api/WebhookPagamentoController.java`
+- [X] T018 [P] [US3] Implementar interface `[Adapter / Port]` `GatewayPagamentoPort` e DTOs `RequisicaoCobrancaDTO` e `RespostaPagamentoDTO` em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/adaptadores/GatewayPagamentoPort.java`
+- [X] T019 [P] [US3] Implementar adaptadores concretos `[Adapter]` `PixGatewayAdapter` (geração de chave copia-e-cola e QR Code), `CartaoCreditoGatewayAdapter` (simulação de autorização online com token) e `BoletoGatewayAdapter` (geração de código de barras e linha digitável) em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/adaptadores/PixGatewayAdapter.java`
+- [X] T020 [P] [US3] Implementar `[Abstract Factory]` `FabricaGatewayPagamento` e `[Service Locator]` `GatewayPagamentoServiceLocator` resolvendo o adaptador correto por `MetodoPagamento` em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/fabrica/GatewayPagamentoServiceLocator.java`
+- [X] T021 [US3] Implementar entidade `RegistroIdempotenciaPagamento` e serviço `ServicoIdempotenciaPagamento` garantindo controle transacional e retorno cacheado para repetições em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/aplicacao/ServicoIdempotenciaPagamento.java`
+- [X] T022 [US3] Implementar `ServicoProcessamentoPagamento` coordenando a transição do pedido para `PAGO`, a confirmação de baixa definitiva no Módulo 1 (`PortaComandoReservaEstoque.confirmarBaixaDefinitiva`), o consumo do cupom no Módulo 2 e o disparo de eventos em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/aplicacao/ServicoProcessamentoPagamento.java`
+- [X] T023 [P] [US3] Implementar controller REST `WebhookPagamentoController` (`POST /api/v1/pagamentos/confirmacao`) com validação de idempotência em `src/main/java/br/edu/fatec/ecommerce/modulo3/pagamento/api/WebhookPagamentoController.java`
 
 **Checkpoint**: User Story 3 completa e testável (pagamentos simulados e garantia de idempotência estrita operacionais).
 
@@ -111,14 +111,14 @@ description: "Task list for Módulo 3 — Checkout, Ciclo de Vida de Pedidos, Pa
 
 ### Tests for User Story 4
 
-- [ ] T024 [P] [US4] Criar testes JUnit 5 para o subsistema de frete (cálculo de prazos e valores para diferentes faixas de CEP e peso, e verificação da regra de frete grátis zerando a modalidade econômica quando qualificada) em `src/test/java/br/edu/fatec/ecommerce/modulo3/frete/CalculoFreteEPoliticaFreteGratisTest.java`
+- [X] T024 [P] [US4] Criar testes JUnit 5 para o subsistema de frete (cálculo de prazos e valores para diferentes faixas de CEP e peso, e verificação da regra de frete grátis zerando a modalidade econômica quando qualificada) em `src/test/java/br/edu/fatec/ecommerce/modulo3/frete/CalculoFreteEPoliticaFreteGratisTest.java`
 
 ### Implementation for User Story 4
 
-- [ ] T025 [P] [US4] Implementar interface `[Adapter / Port]` `CalculadoraFretePort` e Value Object `CotacaoFrete` em `src/main/java/br/edu/fatec/ecommerce/modulo3/frete/adaptadores/CalculadoraFretePort.java`
-- [ ] T026 [P] [US4] Implementar adaptadores concretos `[Adapter]` `CorreiosPacAdapter`, `CorreiosSedexAdapter` e `TransportadoraExpressaAdapter` em `src/main/java/br/edu/fatec/ecommerce/modulo3/frete/adaptadores/CorreiosPacAdapter.java`
-- [ ] T027 [US4] Implementar `PoliticaFreteGratis` e `ServicoCalculoFrete` (consolidação das cotações e aplicação do benefício de isenção) em `src/main/java/br/edu/fatec/ecommerce/modulo3/frete/aplicacao/ServicoCalculoFrete.java`
-- [ ] T028 [P] [US4] Implementar controller REST `FreteController` (`POST /api/v1/frete/calcular`) em `src/main/java/br/edu/fatec/ecommerce/modulo3/frete/api/FreteController.java`
+- [X] T025 [P] [US4] Implementar interface `[Adapter / Port]` `CalculadoraFretePort` e Value Object `CotacaoFrete` em `src/main/java/br/edu/fatec/ecommerce/modulo3/frete/adaptadores/CalculadoraFretePort.java`
+- [X] T026 [P] [US4] Implementar adaptadores concretos `[Adapter]` `CorreiosPacAdapter`, `CorreiosSedexAdapter` e `TransportadoraExpressaAdapter` em `src/main/java/br/edu/fatec/ecommerce/modulo3/frete/adaptadores/CorreiosPacAdapter.java`
+- [X] T027 [US4] Implementar `PoliticaFreteGratis` e `ServicoCalculoFrete` (consolidação das cotações e aplicação do benefício de isenção) em `src/main/java/br/edu/fatec/ecommerce/modulo3/frete/aplicacao/ServicoCalculoFrete.java`
+- [X] T028 [P] [US4] Implementar controller REST `FreteController` (`POST /api/v1/frete/calcular`) em `src/main/java/br/edu/fatec/ecommerce/modulo3/frete/api/FreteController.java`
 
 **Checkpoint**: User Story 4 completa e testável.
 
@@ -130,13 +130,13 @@ description: "Task list for Módulo 3 — Checkout, Ciclo de Vida de Pedidos, Pa
 
 ### Tests for User Story 5
 
-- [ ] T029 [P] [US5] Criar testes JUnit 5 para o cancelamento (cancelamento de pedido aguardando pagamento com devolução automática de estoque no Módulo 1, estorno simulado de pedido pago e rejeição de cancelamento para pedido já enviado) em `src/test/java/br/edu/fatec/ecommerce/modulo3/pedido/CancelamentoPedidoMediatorTest.java`
+- [X] T029 [P] [US5] Criar testes JUnit 5 para o cancelamento (cancelamento de pedido aguardando pagamento com devolução automática de estoque no Módulo 1, estorno simulado de pedido pago e rejeição de cancelamento para pedido já enviado) em `src/test/java/br/edu/fatec/ecommerce/modulo3/pedido/CancelamentoPedidoMediatorTest.java`
 
 ### Implementation for User Story 5
 
-- [ ] T030 [US5] Implementar componente mediador `[Mediator]` `CoordenadorCancelamentoMediator` centralizando a comunicação entre o `Pedido`, o gateway de pagamento (estorno) e a `PortaComandoReservaEstoque` (liberação de reserva) em `src/main/java/br/edu/fatec/ecommerce/modulo3/mediador/CoordenadorCancelamentoMediator.java`
-- [ ] T031 [US5] Implementar `ServicoCancelamentoPedido` com algoritmo em `[Template Method]` validando regras e executando as etapas de compensação em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/aplicacao/ServicoCancelamentoPedido.java`
-- [ ] T032 [P] [US5] Implementar endpoint REST `DELETE /api/v1/pedidos/{id}/cancelamento` no controller de pedidos em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/api/PedidoClienteController.java`
+- [X] T030 [US5] Implementar componente mediador `[Mediator]` `CoordenadorCancelamentoMediator` centralizando a comunicação entre o `Pedido`, o gateway de pagamento (estorno) e a `PortaComandoReservaEstoque` (liberação de reserva) em `src/main/java/br/edu/fatec/ecommerce/modulo3/mediador/CoordenadorCancelamentoMediator.java`
+- [X] T031 [US5] Implementar `ServicoCancelamentoPedido` com algoritmo em `[Template Method]` validando regras e executando as etapas de compensação em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/aplicacao/ServicoCancelamentoPedido.java`
+- [X] T032 [P] [US5] Implementar endpoint REST `DELETE /api/v1/pedidos/{id}/cancelamento` no controller de pedidos em `src/main/java/br/edu/fatec/ecommerce/modulo3/pedido/api/PedidoClienteController.java`
 
 **Checkpoint**: User Story 5 completa e testável (cancelamento resiliente com liberação garantida de estoque).
 
@@ -148,12 +148,12 @@ description: "Task list for Módulo 3 — Checkout, Ciclo de Vida de Pedidos, Pa
 
 ### Tests for User Story 6
 
-- [ ] T033 [P] [US6] Criar testes JUnit 5 para o barramento de eventos (publicação de `PedidoCriadoEvent`, `PagamentoConfirmadoEvent` e `PedidoCanceladoEvent` e reação assíncrona dos listeners) em `src/test/java/br/edu/fatec/ecommerce/modulo3/eventos/BarramentoEventosObserverTest.java`
+- [X] T033 [P] [US6] Criar testes JUnit 5 para o barramento de eventos (publicação de `PedidoCriadoEvent`, `PagamentoConfirmadoEvent` e `PedidoCanceladoEvent` e reação assíncrona dos listeners) em `src/test/java/br/edu/fatec/ecommerce/modulo3/eventos/BarramentoEventosObserverTest.java`
 
 ### Implementation for User Story 6
 
-- [ ] T034 [P] [US6] Implementar barramento `[Observer]` `BarramentoEventosDominio` e classes imutáveis de eventos de domínio `PedidoCriadoEvent`, `PagamentoConfirmadoEvent`, `PedidoCanceladoEvent` e `PedidoEnviadoEvent` em `src/main/java/br/edu/fatec/ecommerce/modulo3/eventos/BarramentoEventosDominio.java`
-- [ ] T035 [P] [US6] Implementar listeners desacoplados `[Observer]` `NotificacaoEmailListener` e `NotificacaoSmsListener` com log simulado e tratamento resiliente de erros em `src/main/java/br/edu/fatec/ecommerce/modulo3/notificacao/NotificacaoEmailListener.java`
+- [X] T034 [P] [US6] Implementar barramento `[Observer]` `BarramentoEventosDominio` e classes imutáveis de eventos de domínio `PedidoCriadoEvent`, `PagamentoConfirmadoEvent`, `PedidoCanceladoEvent` e `PedidoEnviadoEvent` em `src/main/java/br/edu/fatec/ecommerce/modulo3/eventos/BarramentoEventosDominio.java`
+- [X] T035 [P] [US6] Implementar listeners desacoplados `[Observer]` `NotificacaoEmailListener` e `NotificacaoSmsListener` com log simulado e tratamento resiliente de erros em `src/main/java/br/edu/fatec/ecommerce/modulo3/notificacao/NotificacaoEmailListener.java`
 
 **Checkpoint**: User Story 6 completa e testável.
 
@@ -165,13 +165,13 @@ description: "Task list for Módulo 3 — Checkout, Ciclo de Vida de Pedidos, Pa
 
 ### Tests for User Story 7
 
-- [ ] T036 [P] [US7] Criar testes integrados JUnit 5 para os endpoints analíticos de relatórios em `src/test/java/br/edu/fatec/ecommerce/modulo3/relatorios/RelatoriosGerenciaisAdminTest.java`
+- [X] T036 [P] [US7] Criar testes integrados JUnit 5 para os endpoints analíticos de relatórios em `src/test/java/br/edu/fatec/ecommerce/modulo3/relatorios/RelatoriosGerenciaisAdminTest.java`
 
 ### Implementation for User Story 7
 
-- [ ] T037 [P] [US7] Implementar DTOs analíticos `RelatorioVendasConsolidadasDTO`, `RelatorioTicketMedioDTO` e `ItemMaisVendidoDTO` em `src/main/java/br/edu/fatec/ecommerce/modulo3/relatorios/dto/RelatorioVendasConsolidadasDTO.java`
-- [ ] T038 [US7] Implementar `ServicoRelatoriosGerenciais` executando consultas agregadas no `PedidoJpaRepository` em `src/main/java/br/edu/fatec/ecommerce/modulo3/relatorios/aplicacao/ServicoRelatoriosGerenciais.java`
-- [ ] T039 [P] [US7] Implementar controller REST `RelatoriosAdminController` (`GET /api/v1/admin/relatorios/vendas-consolidadas`, `GET /api/v1/admin/relatorios/ticket-medio`, `GET /api/v1/admin/relatorios/produtos-mais-vendidos`) com proteção RBAC em `src/main/java/br/edu/fatec/ecommerce/modulo3/relatorios/api/RelatoriosAdminController.java`
+- [X] T037 [P] [US7] Implementar DTOs analíticos `RelatorioVendasConsolidadasDTO`, `RelatorioTicketMedioDTO` e `ItemMaisVendidoDTO` em `src/main/java/br/edu/fatec/ecommerce/modulo3/relatorios/dto/RelatorioVendasConsolidadasDTO.java`
+- [X] T038 [US7] Implementar `ServicoRelatoriosGerenciais` executando consultas agregadas no `PedidoJpaRepository` em `src/main/java/br/edu/fatec/ecommerce/modulo3/relatorios/aplicacao/ServicoRelatoriosGerenciais.java`
+- [X] T039 [P] [US7] Implementar controller REST `RelatoriosAdminController` (`GET /api/v1/admin/relatorios/vendas-consolidadas`, `GET /api/v1/admin/relatorios/ticket-medio`, `GET /api/v1/admin/relatorios/produtos-mais-vendidos`) com proteção RBAC em `src/main/java/br/edu/fatec/ecommerce/modulo3/relatorios/api/RelatoriosAdminController.java`
 
 **Checkpoint**: User Story 7 completa e testável.
 
@@ -181,9 +181,9 @@ description: "Task list for Módulo 3 — Checkout, Ciclo de Vida de Pedidos, Pa
 
 **Purpose**: Dados pré-carregados de demonstração para a banca, documentação Swagger e validação global da compilação Maven
 
-- [ ] T040 Implementar `InicializadorDemonstracaoModulo3Runner` pré-carregando pedidos de teste nos diferentes estados (`AGUARDANDO_PAGAMENTO`, `PAGO`, `ENVIADO`) para validação imediata no Swagger em `src/main/java/br/edu/fatec/ecommerce/modulo3/compartilhado/InicializadorDemonstracaoModulo3Runner.java`
-- [ ] T041 Configurar anotações OpenAPI/Swagger no `ConfiguracaoOpenApiSwagger.java` documentando as tags do Módulo 3 (`Checkout`, `Pedidos`, `Pagamentos`, `Frete`, `Relatórios`) em `src/main/java/br/edu/fatec/ecommerce/compartilhado/config/ConfiguracaoOpenApiSwagger.java`
-- [ ] T042 Executar a suíte completa de testes com `.\mvnw.cmd clean test` garantindo 100% de sucesso nos testes dos Módulos 1, 2 e 3 sem regressão
+- [X] T040 Implementar `InicializadorDemonstracaoModulo3Runner` pré-carregando pedidos de teste nos diferentes estados (`AGUARDANDO_PAGAMENTO`, `PAGO`, `ENVIADO`) para validação imediata no Swagger em `src/main/java/br/edu/fatec/ecommerce/modulo3/compartilhado/InicializadorDemonstracaoModulo3Runner.java`
+- [X] T041 Configurar anotações OpenAPI/Swagger no `ConfiguracaoOpenApiSwagger.java` documentando as tags do Módulo 3 (`Checkout`, `Pedidos`, `Pagamentos`, `Frete`, `Relatórios`) em `src/main/java/br/edu/fatec/ecommerce/compartilhado/config/ConfiguracaoOpenApiSwagger.java`
+- [X] T042 Executar a suíte completa de testes com `.\mvnw.cmd clean test` garantindo 100% de sucesso nos testes dos Módulos 1, 2 e 3 sem regressão
 
 ---
 
@@ -213,3 +213,18 @@ graph TD
 - Todas as tarefas marcadas com `[P]` podem ser executadas em paralelo ou de forma independente por não dependerem de arquivos concorrentes.
 - Cada User Story é estritamente testável de forma isolada, gerando valor incremental.
 - A regra de documentação Javadoc detalhando objetivo, parâmetros, retornos e papel no Design Pattern é inegociável em todos os métodos e classes.
+
+---
+
+## Registro de Execução e Desvios do Plano (2026-11-12)
+
+Todas as tarefas T001–T042 foram concluídas. Suíte final: **86 testes passando** (Módulos 1, 2 e 3). Desvios em relação ao texto original das tarefas:
+
+- **Nomes das tabelas**: a migração V3 usa `pedidos`, `itens_pedido_snapshot`, `transacoes_pagamento` e `registro_idempotencia_pagamento` (sem prefixo `tb_`). A V3 ganhou as colunas `email_cliente`, `nome_cliente`, `cupom_utilizado` e `promocoes_aplicadas`, e `endereco_uf` virou `VARCHAR(2)` (o `CHAR(2)` original impedia a aplicação de subir).
+- **Portas estendidas (decisão aprovada)**: Módulo 1 ganhou `resolverClienteIdPorEmailUsuario`, `consultarEnderecoEntregaSelecionado`, `estornarBaixaDefinitivaPorCancelamento` (estado `ESTORNADA_POS_BAIXA`) e a nova `PortaRegistroAuditoria`; Módulo 2 ganhou `resolverIdentificadorCarrinhoPorEmail` e a lista `itens` no `ResumoCarrinhoCheckoutDTO`.
+- **Bug corrigido no Módulo 2**: o carrinho de cliente logado usava um UUID derivado do e-mail e violava a FK `carrinhos.cliente_id → clientes(id)`; agora usa o `Cliente.id` real.
+- **T009/T031 (Template Method)**: especializações `ProcessadorCheckoutPagamentoOnline`/`ProcessadorCheckoutPagamentoAssincrono` e `CancelamentoPeloCliente`/`CancelamentoPeloAdministrador`; a transação é aberta por `CheckoutFacade` e `ServicoOperacoesPedido`.
+- **T020**: a Abstract Factory é `FabricaProvedorPagamento` (PIX, Cartão, Boleto), com o `GatewayPagamentoServiceLocator` indexando as fábricas.
+- **T016/T032**: rota extra `PATCH /api/v1/admin/pedidos/{id}/preparar` (necessária para sair de `PAGO`); o motivo do cancelamento vai no parâmetro `motivo`.
+- **T023**: o webhook exige o cabeçalho `X-Gateway-Token`.
+- **T039**: relatório extra `GET /api/v1/admin/relatorios/cancelamentos` (previsto na spec, US7).
