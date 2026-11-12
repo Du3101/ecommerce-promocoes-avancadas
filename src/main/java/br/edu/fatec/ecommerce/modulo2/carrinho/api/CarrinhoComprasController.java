@@ -5,6 +5,7 @@ import br.edu.fatec.ecommerce.modulo2.carrinho.aplicacao.ServicoCarrinhoCompras;
 import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.CarrinhoCompras;
 import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.ItemCarrinho;
 import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.ItemCarrinhoComboKit;
+import br.edu.fatec.ecommerce.modulo2.integracao.PortaConsultaCarrinhoPromocoes;
 import br.edu.fatec.ecommerce.modulo2.precificacao.aplicacao.PipelineFormacaoPrecoService;
 import br.edu.fatec.ecommerce.modulo2.precificacao.dominio.MemoriaCalculoPrecoVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,10 +46,13 @@ public class CarrinhoComprasController {
 
     private final ServicoCarrinhoCompras servicoCarrinho;
     private final PipelineFormacaoPrecoService pipelinePreco;
+    private final PortaConsultaCarrinhoPromocoes portaCarrinho;
 
-    public CarrinhoComprasController(ServicoCarrinhoCompras servicoCarrinho, PipelineFormacaoPrecoService pipelinePreco) {
+    public CarrinhoComprasController(ServicoCarrinhoCompras servicoCarrinho, PipelineFormacaoPrecoService pipelinePreco,
+                                     PortaConsultaCarrinhoPromocoes portaCarrinho) {
         this.servicoCarrinho = servicoCarrinho;
         this.pipelinePreco = pipelinePreco;
+        this.portaCarrinho = portaCarrinho;
     }
 
     public record AdicionarItemRequest(
@@ -201,9 +205,15 @@ public class CarrinhoComprasController {
         );
     }
 
+    /**
+     * Resolve o dono do carrinho do usuário autenticado pela regra única da porta do Módulo 2
+     * ({@code Cliente.id} real; {@code null} para visitantes ou usuários sem perfil de cliente).
+     *
+     * @return ID do cliente dono do carrinho, ou {@code null} para carrinho de sessão
+     */
     private UUID extrairClienteIdAutenticado() {
         return ContextoSegurancaUsuario.obterEmailUsuarioAutenticado()
-                .map(ContextoSegurancaUsuario::derivarUuidDeterministicoPorEmail)
+                .map(portaCarrinho::resolverIdentificadorCarrinhoPorEmail)
                 .orElse(null);
     }
 

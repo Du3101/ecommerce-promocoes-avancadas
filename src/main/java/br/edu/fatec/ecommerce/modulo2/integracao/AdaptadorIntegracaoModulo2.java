@@ -2,7 +2,8 @@ package br.edu.fatec.ecommerce.modulo2.integracao;
 
 import br.edu.fatec.ecommerce.modulo2.carrinho.aplicacao.ServicoCarrinhoCompras;
 import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.CarrinhoCompras;
-import br.edu.fatec.ecommerce.modulo1.identidade.dominio.ContextoSegurancaUsuario;
+import br.edu.fatec.ecommerce.compartilhado.excecao.RecursoNaoEncontradoException;
+import br.edu.fatec.ecommerce.modulo1.integracao.PortaConsultaCatalogoCliente;
 import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.ItemCarrinho;
 import br.edu.fatec.ecommerce.modulo2.carrinho.dominio.ItemCarrinhoComboKit;
 import br.edu.fatec.ecommerce.modulo2.cupons.aplicacao.ServicoCuponsPromocionais;
@@ -34,15 +35,26 @@ public class AdaptadorIntegracaoModulo2 implements PortaConsultaCarrinhoPromocoe
     private final ServicoCarrinhoCompras servicoCarrinho;
     private final PipelineFormacaoPrecoService pipelinePreco;
     private final ServicoCuponsPromocionais servicoCupons;
+    private final PortaConsultaCatalogoCliente portaCliente;
 
+    /**
+     * Construtor com injeção explícita de dependências.
+     *
+     * @param servicoCarrinho serviço de carrinho do Módulo 2
+     * @param pipelinePreco pipeline de formação de preço (Decorator)
+     * @param servicoCupons serviço de cupons
+     * @param portaCliente porta do Módulo 1 usada para resolver o {@code Cliente.id} do dono do carrinho
+     */
     public AdaptadorIntegracaoModulo2(
             ServicoCarrinhoCompras servicoCarrinho,
             PipelineFormacaoPrecoService pipelinePreco,
-            ServicoCuponsPromocionais servicoCupons
+            ServicoCuponsPromocionais servicoCupons,
+            PortaConsultaCatalogoCliente portaCliente
     ) {
         this.servicoCarrinho = Objects.requireNonNull(servicoCarrinho, "servicoCarrinho não pode ser nulo");
         this.pipelinePreco = Objects.requireNonNull(pipelinePreco, "pipelinePreco não pode ser nulo");
         this.servicoCupons = Objects.requireNonNull(servicoCupons, "servicoCupons não pode ser nulo");
+        this.portaCliente = Objects.requireNonNull(portaCliente, "portaCliente não pode ser nulo");
     }
 
     @Override
@@ -98,16 +110,26 @@ public class AdaptadorIntegracaoModulo2 implements PortaConsultaCarrinhoPromocoe
     /**
      * Resolve o identificador de dono de carrinho para um usuário autenticado.
      *
-     * <p>Objetivo Funcional: Reaproveitar exatamente a mesma regra usada pelo {@code CarrinhoComprasController}
-     * (UUID determinístico derivado do e-mail), garantindo que o Módulo 3 leia o mesmo carrinho que o cliente montou.</p>
-     * <p>Papel no Design Pattern: Método adaptado da porta (Anti-Corruption Layer entre Módulos 2 e 3).</p>
+     * <p>Objetivo Funcional: O carrinho de um cliente logado é gravado com o {@code Cliente.id} real do Módulo 1
+     * (a coluna {@code carrinhos.cliente_id} tem chave estrangeira para {@code clientes(id)}). Esta é a regra única
+     * usada tanto pelo {@code CarrinhoComprasController} quanto pelo checkout do Módulo 3, garantindo que ambos leiam
+     * o mesmo carrinho. Usuários sem perfil de cliente (ex.: administradores) não têm carrinho próprio e usam o
+     * carrinho de sessão anônima.</p>
+     * <p>Papel no Design Pattern: Método adaptado da porta (Anti-Corruption Layer entre Módulos 1, 2 e 3).</p>
+     *
+     * <p>Correção (Integrante 3): antes era usado um UUID derivado do e-mail, que não existe em {@code clientes} e
+     * fazia a gravação do carrinho de clientes logados falhar por violação da chave estrangeira.</p>
      *
      * @param emailUsuario e-mail do usuário autenticado.
-     * @return UUID usado como chave do carrinho no Módulo 2.
+     * @return {@code Cliente.id} do usuário, ou {@code null} se o usuário não tiver perfil de cliente.
      */
     @Override
     public UUID resolverIdentificadorCarrinhoPorEmail(String emailUsuario) {
-        return ContextoSegurancaUsuario.derivarUuidDeterministicoPorEmail(emailUsuario);
+        try {
+            return portaCliente.resolverClienteIdPorEmailUsuario(emailUsuario);
+        } catch (RecursoNaoEncontradoException usuarioSemPerfilCliente) {
+            return null;
+        }
     }
 }
 
