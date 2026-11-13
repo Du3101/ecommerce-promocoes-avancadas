@@ -114,6 +114,28 @@ public interface PedidoJpaRepository extends JpaRepository<Pedido, UUID> {
     List<Pedido> findByClienteIdOrderByCriadoEmDesc(UUID clienteId);
 
     /**
+     * Lista todos os pedidos cadastrados na loja ordenados cronologicamente do mais recente ao mais antigo.
+     *
+     * <p>Objetivo Funcional: Alimentar a fila administrativa de pedidos para expedição e auditoria operacional.</p>
+     * <p>Papel no Design Pattern: Query Method declarativa do Spring Data JPA no <b>Repository</b>.</p>
+     *
+     * @return lista completa de pedidos ordenada por {@code criadoEm} descendente
+     */
+    List<Pedido> findAllByOrderByCriadoEmDesc();
+
+    /**
+     * Lista os pedidos filtrados por status específico ordenados do mais recente ao mais antigo.
+     *
+     * <p>Objetivo Funcional: Permitir ao painel administrativo filtrar pedidos pagos, em preparação,
+     * enviados, entregues ou cancelados sem carregar resultados irrelevantes.</p>
+     * <p>Papel no Design Pattern: Query Method declarativa parametrizada por estado do pedido.</p>
+     *
+     * @param status estado desejado no filtro ({@link StatusPedido})
+     * @return lista filtrada ordenada por {@code criadoEm} descendente
+     */
+    List<Pedido> findByStatusOrderByCriadoEmDesc(StatusPedido status);
+
+    /**
      * Conta a quantidade de pedidos que atingiram determinado status.
      *
      * @param status Status do pedido.

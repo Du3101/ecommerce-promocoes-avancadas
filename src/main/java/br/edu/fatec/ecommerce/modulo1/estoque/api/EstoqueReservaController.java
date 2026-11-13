@@ -3,6 +3,7 @@ package br.edu.fatec.ecommerce.modulo1.estoque.api;
 import br.edu.fatec.ecommerce.modulo1.estoque.aplicacao.ServicoReservaEstoqueConcorrente;
 import br.edu.fatec.ecommerce.modulo1.estoque.dominio.ItemEstoque;
 import br.edu.fatec.ecommerce.modulo1.estoque.dominio.ReservaEstoque;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/estoque")
+@Tag(name = "Módulo 1 — Gestão de Estoque e Reservas", description = "Reservas atômicas concorrentes, entradas, bloqueios e expiração TTL")
 public class EstoqueReservaController {
 
     private final ServicoReservaEstoqueConcorrente servicoReservaEstoque;

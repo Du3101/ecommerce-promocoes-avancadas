@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FATEC Store — E-commerce com Promoções Avançadas</title>
+    <link rel="stylesheet" href="/css/tokens.css">
+    <link rel="stylesheet" href="/css/layout.css">
+    <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+    <!-- Barra superior de anúncios / Frete Grátis -->
+    <div id="topbar-frete" class="topbar-info" hidden>
+        <span id="topbar-frete-texto">Carregando política de entregas...</span>
+    </div>
+
+    <!-- Cabeçalho fixo do E-commerce -->
+    <header class="site-header">
+        <div class="container header-inner">
+            <button type="button" class="brand-logo" data-action="ir-vitrine" aria-label="Voltar para a Vitrine">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+                    <path d="M3 6h18"></path>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+                <span class="brand-text">
+                    <strong>FATEC Store</strong>
+                    <small>Promoções Avançadas</small>
+                </span>
+            </button>
+
+            <form id="form-busca-global" class="header-search" role="search">
+                <label for="input-busca-catalogo" class="sr-only">Buscar produtos, combos ou SKU</label>
+                <input
+                    id="input-busca-catalogo"
+                    type="search"
+                    placeholder="Buscar produto, kit ou código SKU..."
+                    autocomplete="off"
+                >
+                <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
+            </form>
+
+            <nav class="header-nav" aria-label="Navegação principal">
+                <button type="button" class="nav-link active" data-nav="vitrine">Vitrine</button>
+                <button type="button" class="nav-link" data-nav="conta" id="btn-nav-conta">Minha Conta</button>
+                <button type="button" class="nav-link" data-nav="checkout" id="btn-nav-checkout">Checkout</button>
+                <button type="button" class="nav-link nav-link-admin" data-nav="admin" id="btn-nav-admin" hidden>
+                    Painel Admin
+                </button>
+            </nav>
+
+            <div class="header-actions">
+                <div id="usuario-logado-pill" class="user-pill" hidden>
+                    <span id="usuario-logado-email" class="user-pill-email"></span>
+                    <span id="usuario-logado-perfis" class="user-pill-role"></span>
+                    <button type="button" id="btn-logout" class="btn btn-ghost btn-xs">Sair</button>
+                </div>
+
+                <button type="button" id="btn-abrir-login" class="btn btn-outline btn-sm">
+                    Entrar / Cadastrar
+                </button>
+
+                <button type="button" id="btn-abrir-carrinho" class="btn btn-cart" aria-label="Abrir carrinho de compras">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Carrinho</span>
+                    <span id="badge-qtd-carrinho" class="cart-badge">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal Multi-Visão -->
+    <main class="main-content">
+        <!-- VISÃO 1: VITRINE PÚBLICA -->
+        <section id="view-vitrine" class="view-section active">
+            <div class="container">
+                <!-- Banners Dinâmicos de Promoções Ativas -->
+                <section class="promo-banners-section" aria-label="Campanhas promocionais vigentes">
+                    <div class="section-header-inline">
+                        <div>
+                            <h1>Ofertas e Promoções Ativas</h1>
+                            <p class="text-muted">Motor de promoções combinado ao vivo no carrinho (Composite + Decorator + Chain)</p>
+                        </div>
+                        <a href="/swagger-ui.html" target="_blank" rel="noopener" class="btn btn-ghost btn-xs">
+                            API Swagger ↗
+                        </a>
+                    </div>
+                    <div id="lista-banners-promocoes" class="promo-banners-grid">
+                        <div class="skeleton-card">Carregando campanhas promocionais...</div>
+                    </div>
+                </section>
+
+                <!-- Grade Principal: Árvore Recursiva Lateral + Vitrine -->
+                <div class="vitrine-layout">
+                    <aside class="category-sidebar card" aria-label="Árvore de categorias">
+                        <div class="sidebar-header">
+                            <h2>Categorias</h2>
+                            <button type="button" id="btn-limpar-categoria" class="btn btn-link btn-xs">
+                                Ver todas
+                            </button>
+                        </div>
+                        <p id="categoria-selecionada-label" class="category-active-path">Todas as categorias</p>
+                        <div id="arvore-categorias" class="category-tree">
+                            <p class="text-muted">Carregando categorias...</p>
+                        </div>
+                    </aside>
+
+                    <div class="vitrine-main">
+                        <div class="vitrine-toolbar card">
+                            <div class="vitrine-toolbar-info">
+                                <span id="contador-itens-vitrine">0 itens encontrados</span>
+                                <span id="filtro-busca-ativo" class="badge badge-info" hidden></span>
+                            </div>
+                            <div class="vitrine-toolbar-actions">
+                                <button type="button" id="btn-recarregar-vitrine" class="btn btn-ghost btn-xs">
+                                    Atualizar vitrine
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="grade-produtos" class="products-grid">
+                            <div class="skeleton-card">Carregando catálogo de produtos e combos...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISÃO 2: ÁREA DO CLIENTE (PERFIL, ENDEREÇOS & HISTÓRICO DE PEDIDOS) -->
+        <section id="view-conta" class="view-section" hidden>
+            <div class="container">
+                <div class="section-header-inline">
+                    <div>
+                        <h1>Minha Conta e Pedidos</h1>
+                        <p class="text-muted">Gerencie múltiplos endereços de entrega e acompanhe seus pedidos imutáveis.</p>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" data-action="ir-vitrine">
+                        ← Voltar às compras
+                    </button>
+                </div>
+
+                <div id="conta-nao-autenticada" class="card empty-state-card" hidden>
+                    <h2>Faça login para acessar sua Área do Cliente</h2>
+                    <p>Autentique-se ou crie sua conta gratuita na loja sem sair da página.</p>
+                    <button type="button" id="btn-conta-entrar" class="btn btn-primary">Entrar ou Criar Conta</button>
+                </div>
+
+                <div id="conta-conteudo-autenticado" hidden>
+                    <div class="account-grid">
+                        <!-- Coluna Perfil + Endereços -->
+                        <div class="stack-md">
+                            <div id="card-perfil-cliente" class="card">
+                                <h2>Dados Cadastrais</h2>
+                                <div id="dados-perfil-cliente" class="profile-summary"></div>
+                            </div>
+
+                            <div class="card">
+                                <div class="section-header-inline">
+                                    <h2>Meus Endereços de Entrega</h2>
+                                    <button type="button" id="btn-toggle-novo-endereco" class="btn btn-primary btn-xs">
+                                        + Novo Endereço
+                                    </button>
+                                </div>
+
+                                <!-- Alerta explícito do Null Object EnderecoAusente -->
+                                <div id="alerta-endereco-ausente" class="alert alert-warning" hidden></div>
+
+                                <form id="form-novo-endereco" class="form-grid card-inset" hidden>
+                                    <h3>Cadastrar Novo Endereço</h3>
+                                    <div class="form-row-2">
+                                        <div class="form-group">
+                                            <label for="end-apelido">Apelido*</label>
+                                            <input id="end-apelido" type="text" placeholder="Casa, Trabalho..." required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="end-cep">CEP (8 dígitos)*</label>
+                                            <input id="end-cep" type="text" placeholder="01310100" maxlength="9" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row-2">
+                                        <div class="form-group">
+                                            <label for="end-logradouro">Logradouro*</label>
+                                            <input id="end-logradouro" type="text" placeholder="Av. Paulista" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="end-numero">Número*</label>
+                                            <input id="end-numero" type="text" placeholder="1000" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row-2">
+                                        <div class="form-group">
+                                            <label for="end-complemento">Complemento</label>
+                                            <input id="end-complemento" type="text" placeholder="Apto 12">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="end-bairro">Bairro*</label>
+                                            <input id="end-bairro" type="text" placeholder="Bela Vista" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row-2">
+                                        <div class="form-group">
+                                            <label for="end-cidade">Cidade*</label>
+                                            <input id="end-cidade" type="text" placeholder="São Paulo" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="end-uf">UF*</label>
+                                            <input id="end-uf" type="text" maxlength="2" placeholder="SP" required>
+                                        </div>
+                                    </div>
+                                    <label class="checkbox-inline">
+                                        <input id="end-selecionar" type="checkbox" checked>
+                                        Definir imediatamente como endereço selecionado para entrega
+                                    </label>
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary btn-sm">Salvar Endereço</button>
+                                        <button type="button" id="btn-cancelar-endereco" class="btn btn-ghost btn-sm">Cancelar</button>
+                                    </div>
+                                </form>
+
+                                <div id="lista-enderecos-cliente" class="address-list"></div>
+                            </div>
+                        </div>
+
+                        <!-- Coluna Histórico de Pedidos -->
+                        <div class="card">
+                            <div class="section-header-inline">
+                                <h2>Meus Pedidos</h2>
+                                <button type="button" id="btn-atualizar-meus-pedidos" class="btn btn-ghost btn-xs">
+                                    Atualizar
+                                </button>
+                            </div>
+                            <div id="lista-meus-pedidos" class="orders-list">
+                                <p class="text-muted">Nenhum pedido carregado ainda.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISÃO 3: CHECKOUT GUIADO -->
+        <section id="view-checkout" class="view-section" hidden>
+            <div class="container">
+                <div class="section-header-inline">
+                    <div>
+                        <h1>Finalizar Compra (Checkout)</h1>
+                        <p class="text-muted">Confirmação de endereço, cotação em tempo real de frete e pagamento idempotente.</p>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" data-action="ir-vitrine">
+                        ← Continuar comprando
+                    </button>
+                </div>
+
+                <div id="checkout-nao-autenticado" class="card empty-state-card" hidden>
+                    <h2>Entre na sua conta de Cliente para finalizar a compra</h2>
+                    <p>Se você já adicionou produtos como visitante, eles serão mesclados automaticamente após o login.</p>
+                    <button type="button" id="btn-checkout-entrar" class="btn btn-primary">Entrar para Finalizar</button>
+                </div>
+
+                <div id="checkout-conteudo" hidden>
+                    <div class="checkout-grid">
+                        <div class="stack-md">
+                            <!-- Passo 1: Endereço de Entrega -->
+                            <div class="card">
+                                <div class="section-header-inline">
+                                    <h2>1. Endereço de Entrega</h2>
+                                    <button type="button" id="btn-checkout-trocar-endereco" class="btn btn-link btn-xs">
+                                        Gerenciar Endereços
+                                    </button>
+                                </div>
+                                <div id="checkout-endereco-box"></div>
+                            </div>
+
+                            <!-- Passo 2: Cotação em Tempo Real de Frete -->
+                            <div class="card">
+                                <div class="section-header-inline">
+                                    <h2>2. Escolha a Entrega</h2>
+                                    <button type="button" id="btn-recalcular-frete" class="btn btn-ghost btn-xs">
+                                        Recotar Frete
+                                    </button>
+                                </div>
+                                <div id="checkout-frete-opcoes" class="freight-options">
+                                    <p class="text-muted">Selecione um endereço válido para calcular o frete.</p>
+                                </div>
+                            </div>
+
+                            <!-- Passo 3: Pagamento -->
+                            <div class="card">
+                                <h2>3. Forma de Pagamento</h2>
+                                <div class="payment-methods" role="radiogroup" aria-label="Métodos de pagamento">
+                                    <label class="payment-option">
+                                        <input type="radio" name="metodoPagamento" value="PIX" checked>
+                                        <span><strong>PIX</strong><small>Confirmação assíncrona (gera chave copia-e-cola)</small></span>
+                                    </label>
+                                    <label class="payment-option">
+                                        <input type="radio" name="metodoPagamento" value="CARTAO_CREDITO">
+                                        <span><strong>Cartão de Crédito</strong><small>Aprovação ou recusa online imediata</small></span>
+                                    </label>
+                                    <label class="payment-option">
+                                        <input type="radio" name="metodoPagamento" value="BOLETO">
+                                        <span><strong>Boleto Bancário</strong><small>Linha digitável com compensação simulável</small></span>
+                                    </label>
+                                </div>
+
+                                <div id="checkout-cartao-campos" class="card-inset stack-sm" hidden>
+                                    <div class="demo-card-presets">
+                                        <span class="text-muted">Atalho de demonstração (cartão fictício):</span>
+                                        <button type="button" class="btn btn-outline btn-xs" id="btn-cartao-aprovado">
+                                            Preencher Cartão Aprovado
+                                        </button>
+                                        <button type="button" class="btn btn-danger-outline btn-xs" id="btn-cartao-recusado">
+                                            Cartão Recusado (final 0000)
+                                        </button>
+                                    </div>
+                                    <div class="form-row-2">
+                                        <div class="form-group">
+                                            <label for="checkout-numero-cartao">Número do Cartão Fictício</label>
+                                            <input id="checkout-numero-cartao" type="text" placeholder="4111111111111111 (final 0000 recusa)">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="checkout-titular-cartao">Nome Impresso no Cartão</label>
+                                            <input id="checkout-titular-cartao" type="text" placeholder="CLIENTE DEMO FATEC">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="margin-top: 1rem;">
+                                    <label for="checkout-chave-idempotencia">Chave de Idempotência (opcional)</label>
+                                    <input id="checkout-chave-idempotencia" type="text" maxlength="60" placeholder="Ex.: pedido-teste-01 (apenas letras, números, '-' e '_')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumo do Pedido no Checkout -->
+                        <aside class="card checkout-summary-card">
+                            <h2>Resumo Financeiro</h2>
+                            <div id="checkout-resumo-itens" class="summary-items"></div>
+                            <div id="checkout-resumo-totais" class="price-breakdown"></div>
+                            <button type="button" id="btn-confirmar-checkout" class="btn btn-primary btn-lg btn-block">
+                                Confirmar Pedido
+                            </button>
+                            <div id="checkout-erro-box" class="alert alert-danger" hidden></div>
+                        </aside>
+                    </div>
+
+                    <!-- Painel Pós-Checkout (Confirmação + Simulação Controlada Demo) -->
+                    <div id="checkout-confirmacao-resultado" class="card confirmation-card" hidden></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISÃO 4: PAINEL ADMINISTRATIVO RBAC -->
+        <section id="view-admin" class="view-section" hidden>
+            <div class="container">
+                <div class="section-header-inline">
+                    <div>
+                        <h1>Painel Administrativo</h1>
+                        <p class="text-muted">Ferramentas habilitadas dinamicamente conforme seus perfis RBAC.</p>
+                    </div>
+                    <span id="admin-perfis-ativos" class="badge badge-primary"></span>
+                </div>
+
+                <div id="admin-abas-nav" class="admin-tabs" role="tablist"></div>
+                <div id="admin-tab-conteudo" class="card admin-panel-body"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- DRAWER LATERAL DO CARRINHO -->
+    <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+    <aside id="drawer-carrinho" class="cart-drawer" aria-label="Carrinho de compras" hidden>
+        <div class="drawer-header">
+            <div>
+                <h2>Seu Carrinho</h2>
+                <small id="drawer-sessao-label" class="text-muted">Sessão visitante</small>
+            </div>
+            <button type="button" id="btn-fechar-carrinho" class="btn btn-ghost btn-sm" aria-label="Fechar carrinho">✕</button>
+        </div>
+
+        <div id="drawer-frete-progresso" class="free-shipping-bar" hidden></div>
+
+        <div id="drawer-carrinho-itens" class="drawer-body">
+            <p class="text-muted">Seu carrinho está vazio.</p>
+        </div>
+
+        <div class="drawer-footer">
+            <form id="form-cupom-carrinho" class="coupon-form">
+                <label for="input-cupom-codigo" class="sr-only">Código do cupom promocional</label>
+                <input id="input-cupom-codigo" type="text" placeholder="Cupom (ex.: BEMVINDO10, FATEC50)">
+                <button type="submit" class="btn btn-outline btn-sm">Aplicar</button>
+                <button type="button" id="btn-remover-cupom" class="btn btn-ghost btn-sm" hidden>Remover</button>
+            </form>
+            <div id="drawer-cupom-feedback" class="coupon-feedback" hidden></div>
+
+            <div id="drawer-memoria-calculo" class="price-breakdown"></div>
+
+            <div class="drawer-actions">
+                <button type="button" id="btn-esvaziar-carrinho" class="btn btn-ghost btn-sm" disabled>
+                    Esvaziar
+                </button>
+                <button type="button" id="btn-ir-checkout" class="btn btn-primary btn-block" disabled>
+                    Finalizar Compra
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MODAL DE AUTENTICAÇÃO (LOGIN / CADASTRO SEM POPUP NATIVO) -->
+    <div id="modal-auth" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-auth-titulo" hidden>
+        <div class="modal-dialog modal-md">
+            <div class="modal-header">
+                <h2 id="modal-auth-titulo">Acessar FATEC Store</h2>
+                <button type="button" id="btn-fechar-modal-auth" class="btn btn-ghost btn-sm" aria-label="Fechar modal">✕</button>
+            </div>
+
+            <div class="modal-tabs">
+                <button type="button" id="tab-btn-login" class="modal-tab active">Entrar</button>
+                <button type="button" id="tab-btn-cadastro" class="modal-tab">Criar Conta de Cliente</button>
+            </div>
+
+            <!-- Aba Login -->
+            <div id="tab-pane-login" class="modal-body">
+                <div id="auth-erro-banner" class="alert alert-danger" hidden></div>
+                <form id="form-login" class="stack-sm">
+                    <div class="form-group">
+                        <label for="login-email">E-mail</label>
+                        <input id="login-email" type="email" required placeholder="seu.email@exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-senha">Senha</label>
+                        <input id="login-senha" type="password" required placeholder="Sua senha">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+                </form>
+
+                <!-- Cartões Discretos de Acesso Rápido Demo (Exibidos APENAS com modoDemonstracaoAtivo=true) -->
+                <div id="secao-acesso-rapido-demo" class="quick-demo-box" hidden>
+                    <p class="quick-demo-title">Acesso Rápido (Demonstração)</p>
+                    <div class="quick-demo-grid">
+                        <button type="button" id="btn-demo-cliente" class="demo-account-card">
+                            <strong>Cliente Demonstração</strong>
+                            <span>cliente.demo@ecommerce.fatec.edu.br</span>
+                        </button>
+                        <button type="button" id="btn-demo-admin" class="demo-account-card">
+                            <strong>Administrador (RBAC Total)</strong>
+                            <span>admin@ecommerce.fatec.edu.br</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Cadastro Cliente -->
+            <div id="tab-pane-cadastro" class="modal-body" hidden>
+                <div id="cadastro-erro-banner" class="alert alert-danger" hidden></div>
+                <form id="form-cadastro-cliente" class="stack-sm">
+                    <div class="form-group">
+                        <label for="cad-nome">Nome Completo*</label>
+                        <input id="cad-nome" type="text" required placeholder="Maria Silva">
+                    </div>
+                    <div class="form-group">
+                        <label for="cad-email">E-mail*</label>
+                        <input id="cad-email" type="email" required placeholder="maria@exemplo.com">
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="cad-cpf">CPF (11 dígitos)*</label>
+                            <input id="cad-cpf" type="text" required maxlength="14" placeholder="12345678909">
+                        </div>
+                        <div class="form-group">
+                            <label for="cad-telefone">Telefone*</label>
+                            <input id="cad-telefone" type="text" required placeholder="11988887777">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cad-senha">Senha*</label>
+                        <input id="cad-senha" type="password" required minlength="6" placeholder="Mínimo 6 caracteres">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Criar Conta e Entrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GENÉRICO DE DETALHES (ITEM / PEDIDO SNAPSHOT) -->
+    <div id="modal-detalhes" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-detalhes-titulo" hidden>
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h2 id="modal-detalhes-titulo">Detalhes</h2>
+                <button type="button" id="btn-fechar-modal-detalhes" class="btn btn-ghost btn-sm" aria-label="Fechar detalhes">✕</button>
+            </div>
+            <div id="modal-detalhes-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- TOASTS DE FEEDBACK -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <script type="module" src="/js/main.js"></script>
+</body>
+</html>

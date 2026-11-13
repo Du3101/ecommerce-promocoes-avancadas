@@ -56,26 +56,47 @@ public class ConfiguracaoOpenApiSwagger {
             .info(informacoesApi)
             .components(new Components().addSecuritySchemes(ESQUEMA_BASIC_AUTH, esquemaSegurancaBasic))
             .addSecurityItem(new SecurityRequirement().addList(ESQUEMA_BASIC_AUTH))
-            .tags(criarTagsModulo3());
+            .tags(criarTagsEspecificacaoApi());
     }
 
     /**
-     * Cria as tags (grupos de endpoints) do Módulo 3 exibidas no Swagger UI.
+     * Cria as tags unificadas dos Módulos 1, 2, 3 e 4 exibidas e agrupadas no Swagger UI.
      *
-     * <p>Objetivo Funcional: Organizar os endpoints de Checkout, Pedidos, Pagamentos, Frete e Relatórios em seções
-     * próprias, com o padrão de projeto principal de cada uma (T041).</p>
-     * <p>Papel no Design Pattern: Método auxiliar privado de documentação da fronteira REST do Módulo 3.</p>
+     * <p>Objetivo Funcional: Organizar os endpoints de Catálogo, Estoque, Identidade, Auditoria,
+     * Carrinho, Promoções, Cupons, Checkout, Pedidos, Pagamentos, Frete, Relatórios e Configuração
+     * Pública em seções alinhadas exatamente às anotações {@code @Tag} dos controladores REST.</p>
+     * <p>Papel no Design Pattern: Método auxiliar privado de documentação abrangente da fronteira REST.</p>
      *
-     * @return lista de tags do Módulo 3
+     * @return lista ordenada de tags da especificação OpenAPI 3
      */
-    private List<Tag> criarTagsModulo3() {
+    private List<Tag> criarTagsEspecificacaoApi() {
         return List.of(
+            new Tag().name("Módulo 1 — Catálogo Público").description(
+                "Vitrine, árvore de categorias (Composite) e disponibilidade de estoque"),
+            new Tag().name("Módulo 1 — Gestão Administrativa de Catálogo").description(
+                "CRUD auditado de categorias, produtos, variações Flyweight e combos (Proxy)"),
+            new Tag().name("Módulo 1 — Gestão de Estoque e Reservas").description(
+                "Reservas atômicas concorrentes, entradas, bloqueios e expiração TTL"),
+            new Tag().name("Módulo 1 — Identidade, Autenticação e Clientes").description(
+                "Auto-cadastro de clientes, perfil, usuários internos e endereços (Null Object)"),
+            new Tag().name("Módulo 1 — Auditoria Administrativa").description(
+                "Consulta imutável da trilha de operações administrativas registradas pelos Proxies"),
+            new Tag().name("Módulo 2 — Carrinho de Compras").description(
+                "Endpoints para gerenciamento do carrinho, mesclagem visitante→cliente e descontos"),
+            new Tag().name("Promoções Públicas").description(
+                "Consulta pública de campanhas ativas na vitrine da loja"),
+            new Tag().name("Módulo 2 — Gestão Administrativa de Promoções").description(
+                "Criação e ativação de regras e campanhas promocionais (ADMIN e RESPONSAVEL_PROMOCOES)"),
+            new Tag().name("Módulo 2 — Gestão Administrativa de Cupons").description(
+                "Criação e ativação de cupons de desconto (ADMIN e RESPONSAVEL_PROMOCOES)"),
             new Tag().name("Checkout").description("Módulo 3 — Fechamento de compra (Facade + Template Method)"),
-            new Tag().name("Pedidos").description("Módulo 3 — Consulta, cancelamento e expedição (State + Mediator)"),
+            new Tag().name("Pedidos").description("Módulo 3 — Consulta, listagem geral, cancelamento e expedição (State + Mediator)"),
             new Tag().name("Pagamentos").description(
-                "Módulo 3 — Webhook idempotente (Adapter + Abstract Factory). Header X-Gateway-Token obrigatório"),
+                "Módulo 3 — Webhook idempotente (Adapter + Abstract Factory) e simulação controlada demo"),
             new Tag().name("Frete").description("Módulo 3 — Cotação de frete (Adapter/ACL) e frete grátis"),
-            new Tag().name("Relatórios").description("Módulo 3 — Relatórios gerenciais (somente ADMIN)")
+            new Tag().name("Relatórios").description("Módulo 3 — Relatórios gerenciais (somente ADMIN)"),
+            new Tag().name("Configuração Pública da Loja").description(
+                "Módulo 4 — Parâmetros públicos de frete grátis e modo demonstração")
         );
     }
 
@@ -109,23 +130,25 @@ public class ConfiguracaoOpenApiSwagger {
      */
     private Info criarInformacoesInstitucionaisApi() {
         return new Info()
-            .title("Sistema de E-commerce com Promoções Avançadas — Módulo 1 (FATEC)")
+            .title("Sistema de E-commerce com Promoções Avançadas — Módulo 1, Módulo 2, Módulo 3 & Portal Web (FATEC)")
             .version("1.0.0")
             .description(
-                "API REST do Módulo 1 (Integrante 1): Identidade, Catálogo, Composição de Produtos, "
-                + "Estoque Concorrente e Trilha de Auditoria.\n\n"
-                + "**Padrões GoF aplicados neste módulo**: Composite (Categorias e Combos/Kits), "
-                + "Flyweight (Atributos de Variação), Builder (Produto, ComboKit, Cliente e Endereço), "
-                + "Factory Method, Static Factory Method, Proxy (Proteção RBAC e Auditoria Imutável), "
-                + "Singleton e Null Object (Endereço e Categoria Raiz).\n\n"
-                + "**Credencial Inicial (Botão Authorize)**: `admin@ecommerce.fatec.edu.br` / `AdminFatec@2026`\n\n"
-                + "**Módulo 3 (Integrante 3 — Henrique Sandrini)**: Checkout, Pedidos, Pagamentos idempotentes, Frete, "
-                + "Eventos e Relatórios. Padrões: Facade, Template Method/Hook, State, Adapter/ACL, Abstract Factory, "
-                + "Service Locator, Observer, Mediator e Builder. Cliente de demonstração: "
-                + "`cliente.demo@ecommerce.fatec.edu.br` / `ClienteFatec@2026`. Webhook de pagamento: header "
-                + "`X-Gateway-Token: gateway-simulado-fatec`."
+                "API REST completa do Sistema de E-commerce com Portal Web integrado em `http://localhost:8080/`.\n\n"
+                + "**Módulo 1 (Identidade, Catálogo, Estoque Concorrente e Auditoria)**: "
+                + "Composite (Categorias e Combos/Kits), Flyweight (Atributos), Builder, Factory Method, "
+                + "Proxy (RBAC e Auditoria Imutável), Singleton e Null Object (Endereço e Categoria Raiz).\n\n"
+                + "**Módulo 2 (Carrinho, Promoções e Cupons)**: Carrinho anônimo via `X-Sessao-Carrinho` e autenticado com "
+                + "mesclagem no login (`POST /api/v1/carrinho/mesclar`), Pipeline Decorator + Composite de cálculo, "
+                + "4 mecânicas promocionais (Strategy + Dynamic Factory + Chain of Responsibility) e vitrine pública "
+                + "(`GET /api/v1/promocoes/ativas`).\n\n"
+                + "**Módulo 3 (Checkout, Pedidos, Pagamentos Idempotentes, Frete e Relatórios)**: "
+                + "Facade, Template Method, State, Adapter/ACL, Abstract Factory, Observer, Mediator, "
+                + "listagem geral admin (`GET /api/v1/admin/pedidos`) e simulação controlada em modo demo.\n\n"
+                + "**Credencial Admin (Botão Authorize)**: `admin@ecommerce.fatec.edu.br` / `AdminFatec@2026` | "
+                + "**Cliente Demo**: `cliente.demo@ecommerce.fatec.edu.br` / `ClienteFatec@2026` | "
+                + "**Webhook**: header `X-Gateway-Token: gateway-simulado-fatec`."
             )
-            .contact(new Contact().name("FATEC — Equipe E-commerce Promoções Avançadas — Módulo 1"));
+            .contact(new Contact().name("FATEC — Equipe E-commerce Promoções Avançadas"));
     }
 }
 

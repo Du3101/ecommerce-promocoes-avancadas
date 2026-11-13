@@ -2,10 +2,8 @@ package br.edu.fatec.ecommerce.modulo1.catalogo.api;
 
 import br.edu.fatec.ecommerce.modulo1.catalogo.aplicacao.ServicoConsultaCatalogo;
 import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.categoria.CategoriaComp;
-import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.item.ComboKitComposite;
-import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.item.DimensoesFisicas;
 import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.item.ItemCatalogoComponent;
-import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.item.ProdutoVariacaoLeaf;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/catalogo")
+@Tag(name = "Módulo 1 — Catálogo Público", description = "Vitrine, árvore de categorias (Composite) e disponibilidade de estoque")
 public class CatalogoPublicoController {
 
     private final ServicoConsultaCatalogo servicoConsultaCatalogo;
@@ -132,40 +131,7 @@ public class CatalogoPublicoController {
      * @return mapa JSON detalhado do item
      */
     private Map<String, Object> mapearItemCatalogoUniforme(ItemCatalogoComponent item) {
-        DimensoesFisicas dim = item.obterDimensoesFisicas();
-        Map<String, Object> mapa = new LinkedHashMap<>();
-        mapa.put("id", item.obterId());
-        mapa.put("sku", item.obterSku());
-        mapa.put("nomeExibicao", item.obterNomeExibicao());
-        mapa.put("eComboKit", item.eComboKit());
-        mapa.put("ativo", item.estaAtivo());
-        mapa.put("precoVigente", item.calcularPrecoVigente());
-        mapa.put("pesoTotalGramas", item.obterPesoTotalGramas());
-        mapa.put("dimensoesFisicas", Map.of(
-            "pesoGramas", dim.obterPesoGramas(),
-            "alturaCm", dim.obterAlturaCm(),
-            "larguraCm", dim.obterLarguraCm(),
-            "profundidadeCm", dim.obterProfundidadeCm(),
-            "volumeCubicoCm3", dim.calcularVolumeCubicoCm3()
-        ));
-        mapa.put("categoriaPrincipalId", item.obterCategoriaPrincipalId());
-        mapa.put("disponibilidadeMaximaEstoque", this.servicoConsultaCatalogo.calcularDisponibilidadeEstoque(item));
-
-        if (item instanceof ProdutoVariacaoLeaf variacao) {
-            mapa.put("atributosFlyweight", variacao.obterAtributosFlyweight().stream()
-                .map(attr -> Map.of(
-                    "id", attr.obterId(),
-                    "tipo", attr.obterTipo(),
-                    "valor", attr.obterValor(),
-                    "codigoApresentacao", attr.obterCodigoApresentacao()
-                ))
-                .collect(Collectors.toList()));
-        } else if (item instanceof ComboKitComposite combo) {
-            mapa.put("modoPreco", combo.obterModoPreco());
-            mapa.put("percentualDescontoKit", combo.obterPercentualDescontoKit());
-            mapa.put("skusFisicosDecompostos", combo.expandirSkusFisicosComMultiplicador());
-        }
-        return mapa;
+        return CatalogoRestMapper.mapearItemUniforme(item, this.servicoConsultaCatalogo);
     }
 }
 

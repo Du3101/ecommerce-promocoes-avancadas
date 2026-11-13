@@ -9,6 +9,7 @@ import br.edu.fatec.ecommerce.modulo2.promocoes.dominio.composite.CondicaoPrimei
 import br.edu.fatec.ecommerce.modulo2.promocoes.dominio.composite.CondicaoValorMinimoCarrinho;
 import br.edu.fatec.ecommerce.modulo2.promocoes.infraestrutura.CampanhaPromocionalJpaRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,16 +23,27 @@ import java.util.UUID;
  *
  * <p><b>Papel Arquitetural no Design Pattern:</b>
  * Inicializa de forma idempotente as 4 modalidades distintas de promoções exigidas pela Constituição
- * e os cupons promocionais de teste para validação imediata no Swagger UI e na defesa acadêmica.
+ * e os cupons promocionais de teste logo após o Módulo 1 ({@code @Order(3)}) para validação imediata
+ * no Portal Web, Swagger UI e defesa acadêmica.</p>
  *
  * @author Eduardo Juncker Toras (Integrante 2)
  */
 @Component
+@Order(3)
 public class InicializadorDemonstracaoModulo2Runner implements CommandLineRunner {
 
     private final CampanhaPromocionalJpaRepository campanhaRepository;
     private final CupomPromocionalJpaRepository cupomRepository;
 
+    /**
+     * Construtor com injeção explícita dos repositórios de campanhas e cupons promocionais.
+     *
+     * <p>Objetivo Funcional: Permitir a gravação idempotente dos dados de demonstração do Módulo 2.</p>
+     * <p>Papel no Design Pattern: Injeção de dependências de persistência no inicializador de bootstrap.</p>
+     *
+     * @param campanhaRepository repositório JPA de campanhas promocionais
+     * @param cupomRepository repositório JPA de cupons promocionais
+     */
     public InicializadorDemonstracaoModulo2Runner(
             CampanhaPromocionalJpaRepository campanhaRepository,
             CupomPromocionalJpaRepository cupomRepository
@@ -40,6 +52,15 @@ public class InicializadorDemonstracaoModulo2Runner implements CommandLineRunner
         this.cupomRepository = cupomRepository;
     }
 
+    /**
+     * Callback do Spring Boot executado na subida da aplicação após os runners {@code @Order(1)} e {@code @Order(2)}.
+     *
+     * <p>Objetivo Funcional: Orquestrar a carga inicial idempotente de campanhas e cupons de demonstração.</p>
+     * <p>Papel no Design Pattern: Gancho de ciclo de vida ({@link CommandLineRunner}) garantindo massa pronta
+     * para o motor de promoções e a vitrine pública.</p>
+     *
+     * @param args argumentos opcionais da linha de comando na inicialização da JVM
+     */
     @Override
     @Transactional
     public void run(String... args) {
@@ -47,6 +68,14 @@ public class InicializadorDemonstracaoModulo2Runner implements CommandLineRunner
         inicializarCuponsDemonstracao();
     }
 
+    /**
+     * Cadastra as 4 campanhas promocionais demonstrativas caso o repositório ainda esteja vazio.
+     *
+     * <p>Objetivo Funcional: Garantir as 4 naturezas distintas exigidas pela Constituição
+     * (Leve X Pague Y, Percentual Primeira Compra, Valor Fixo Meta e Combo Cruzado Casado).</p>
+     * <p>Papel no Design Pattern: Carga idempotente alimentando o <b>Dynamic Factory</b> e a
+     * árvore <b>Composite</b> de elegibilidade.</p>
+     */
     private void inicializarCampanhasDemonstracao() {
         if (campanhaRepository.count() > 0) {
             return;
@@ -125,6 +154,12 @@ public class InicializadorDemonstracaoModulo2Runner implements CommandLineRunner
         campanhaRepository.save(c4);
     }
 
+    /**
+     * Inicializa cupons promocionais de demonstração idempotentes caso não existam cupons cadastrados.
+     *
+     * <p>Atua como etapa auxiliar de semeadura (Data Seeder / CommandLineRunner) garantindo
+     * códigos prontos para testes manuais do carrinho e checkout sem sobrescrever registros existentes.</p>
+     */
     private void inicializarCuponsDemonstracao() {
         if (cupomRepository.count() > 0) {
             return;

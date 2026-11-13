@@ -1,9 +1,9 @@
 package br.edu.fatec.ecommerce.compartilhado.seguranca;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -11,13 +11,15 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Configuração global de Segurança HTTP, Hash de Senhas e Autorização por Perfil (RBAC).
  *
  * <p>Responsabilidade Comercial: Proteger todas as rotas da API REST conforme os perfis
- * de usuário definidos em FR-001 e FR-002 e fornecer o codificador BCrypt irreversível.</p>
+ * de usuário definidos em FR-001 e FR-002, fornecer o codificador BCrypt irreversível e liberar
+ * o portal web estático servido em {@code /}.</p>
  */
 @Configuration
 @EnableWebSecurity
@@ -38,29 +40,59 @@ public class ConfiguracaoSegurancaHttp {
     }
 
     /**
+     * Registra o ponto de entrada customizado de autenticação REST que omite o cabeçalho
+     * {@code WWW-Authenticate} para evitar caixas de diálogo nativas do navegador.
+     *
+     * <p>Objetivo Funcional: Padronizar respostas 401 em JSON em toda chamada {@code fetch()} do portal web.</p>
+     * <p>Papel no Design Pattern: Fábrica de {@link AuthenticationEntryPoint} customizado da borda HTTP.</p>
+     *
+     * @param objectMapper serializador JSON gerenciado pelo Spring Boot
+     * @return instância configurada de {@link EntradaAutenticacaoRestSemPopup}
+     */
+    @Bean
+    public AuthenticationEntryPoint entradaAutenticacaoRestSemPopup(ObjectMapper objectMapper) {
+        return new EntradaAutenticacaoRestSemPopup(objectMapper);
+    }
+
+    /**
      * Configura a cadeia de filtros de segurança HTTP e as regras de autorização por rota e perfil.
      *
-     * <p>Objetivo Funcional: Liberar o auto-cadastro público de clientes e a consulta pública do catálogo,
-     * restringindo rotas de clientes, catálogo administrativo, estoque e auditoria aos respectivos perfis.</p>
+     * <p>Objetivo Funcional: Liberar os recursos estáticos do portal web, endpoints públicos de vitrine
+     * e auto-cadastro, restringindo rotas autenticadas por perfil RBAC e configurando resposta 401
+     * JSON sem popup nativo.</p>
      * <p>Papel no Design Pattern: Cadeia de filtros de segurança na borda HTTP que complementa os
      * Protection Proxies da camada de aplicação.</p>
      *
      * @param http objeto builder de segurança HTTP do Spring Security
+     * @param entradaAutenticacao point de resposta 401 sem cabeçalho {@code WWW-Authenticate}
      * @return cadeia de filtros configurada ({@link SecurityFilterChain})
      * @throws Exception caso ocorra erro na construção da cadeia
      */
     @Bean
-    public SecurityFilterChain cadeiaDeFiltrosSeguranca(HttpSecurity http) throws Exception {
+    public SecurityFilterChain cadeiaDeFiltrosSeguranca(
+        HttpSecurity http,
+        AuthenticationEntryPoint entradaAutenticacao
+    ) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
             .authorizeHttpRequests(auth -> auth
+                // Portal web estático servido diretamente pelo Spring Boot na raiz
+                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/css/**", "/js/**", "/img/**", "/favicon.ico").permitAll()
                 // Documentação OpenAPI/Swagger e console H2 de desenvolvimento
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/h2-console/**").permitAll()
                 // Rotas públicas de cadastro de cliente e login
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/clientes/cadastro", "/api/v1/auth/login").permitAll()
-                // Rotas públicas de consulta ao catálogo e estoque informativo
-                .requestMatchers(HttpMethod.GET, "/api/v1/catalogo/**", "/api/v1/estoque/**").permitAll()
+                // Rotas públicas de consulta ao catálogo, estoque, promoções ativas e configuração da vitrine
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/v1/catalogo/**",
+                    "/api/v1/estoque/**",
+                    "/api/v1/promocoes/ativas",
+                    "/api/v1/loja/configuracao"
+                ).permitAll()
+                // Mesclagem de carrinho visitante ao logar exige cliente autenticado (regra antes de /carrinho/**)
+                .requestMatchers(HttpMethod.POST, "/api/v1/carrinho/mesclar").hasRole("CLIENTE")
                 // Rotas públicas de consulta e manipulação de carrinho (Módulo 2)
                 .requestMatchers("/api/v1/carrinho/**").permitAll()
                 // Rotas exclusivas do próprio Cliente autenticado
@@ -80,7 +112,7 @@ public class ConfiguracaoSegurancaHttp {
                 // Módulo 3 — checkout e histórico próprio: somente clientes
                 .requestMatchers(HttpMethod.POST, "/api/v1/checkout").hasRole("CLIENTE")
                 .requestMatchers(HttpMethod.GET, "/api/v1/pedidos/me").hasRole("CLIENTE")
-                // Módulo 3 — detalhe e cancelamento: cliente (somente os próprios, checado no serviço) ou ADMIN
+                // Módulo 3 — detalhe, simulação demo e cancelamento: cliente (dono) ou ADMIN
                 .requestMatchers("/api/v1/pedidos/**").hasAnyRole("CLIENTE", "ADMIN")
                 // Módulo 3 — expedição: ADMIN ou OPERADOR_COMERCIAL
                 .requestMatchers("/api/v1/admin/pedidos/**").hasAnyRole("ADMIN", "OPERADOR_COMERCIAL")
@@ -89,7 +121,8 @@ public class ConfiguracaoSegurancaHttp {
                 // Qualquer outra rota exige autenticação
                 .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults());
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(entradaAutenticacao))
+            .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(entradaAutenticacao));
 
         return http.build();
     }

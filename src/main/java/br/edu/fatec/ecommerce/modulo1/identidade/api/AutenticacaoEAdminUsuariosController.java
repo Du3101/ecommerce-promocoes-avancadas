@@ -5,6 +5,7 @@ import br.edu.fatec.ecommerce.modulo1.identidade.dominio.Cliente;
 import br.edu.fatec.ecommerce.modulo1.identidade.dominio.OpcaoEnderecoEntrega;
 import br.edu.fatec.ecommerce.modulo1.identidade.dominio.PerfilUsuario;
 import br.edu.fatec.ecommerce.modulo1.identidade.dominio.Usuario;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * autenticação por credenciais e provisão administrativa de operadores internos (FR-001, FR-002).
  */
 @RestController
+@Tag(name = "Módulo 1 — Identidade, Autenticação e Clientes", description = "Auto-cadastro de clientes, perfil, usuários internos e endereços (Null Object)")
 public class AutenticacaoEAdminUsuariosController {
 
     private final ServicoIdentidadeECliente servicoIdentidade;
