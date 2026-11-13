@@ -1,6 +1,7 @@
 package br.edu.fatec.ecommerce.modulo1.catalogo.api;
 
 import br.edu.fatec.ecommerce.modulo1.catalogo.aplicacao.ServicoAdminCatalogoPort;
+import br.edu.fatec.ecommerce.modulo1.catalogo.aplicacao.ServicoConsultaCatalogo;
 import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.categoria.CategoriaComp;
 import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.flyweight.AtributoVariacaoFlyweight;
 import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.flyweight.FabricaAtributoVariacaoFlyweight;
@@ -11,6 +12,7 @@ import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.item.ItemCatalogoComponen
 import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.item.ModoPrecoCombo;
 import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.item.Produto;
 import br.edu.fatec.ecommerce.modulo1.catalogo.dominio.item.ProdutoBuilder;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -24,11 +26,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -40,13 +44,15 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/admin/catalogo")
+@Tag(name = "Módulo 1 — Gestão Administrativa de Catálogo", description = "CRUD auditado de categorias, produtos, variações Flyweight e combos (Proxy)")
 public class CatalogoAdminController {
 
     private final ServicoAdminCatalogoPort servicoAdminCatalogo;
     private final FabricaAtributoVariacaoFlyweight fabricaFlyweight;
+    private final ServicoConsultaCatalogo servicoConsultaCatalogo;
 
     /**
-     * Construtor com injeção da porta administrativa (Proxy) e da fábrica Flyweight.
+     * Construtor com injeção da porta administrativa (Proxy), da fábrica Flyweight e do serviço de consulta.
      *
      * <p>Objetivo Funcional: Expor endpoints administrativos protegidos por RBAC e auditados.</p>
      * <p>Papel no Design Pattern: Cliente do padrão <b>Proxy</b> ({@link ServicoAdminCatalogoPort})
@@ -54,13 +60,38 @@ public class CatalogoAdminController {
      *
      * @param servicoAdminCatalogo porta administrativa do catálogo (injetada via {@code @Primary} Proxy)
      * @param fabricaFlyweight fábrica de atributos intrínsecos compartilhados
+     * @param servicoConsultaCatalogo serviço de consulta do catálogo para listagem administrativa completa
      */
     public CatalogoAdminController(
         ServicoAdminCatalogoPort servicoAdminCatalogo,
-        FabricaAtributoVariacaoFlyweight fabricaFlyweight
+        FabricaAtributoVariacaoFlyweight fabricaFlyweight,
+        ServicoConsultaCatalogo servicoConsultaCatalogo
     ) {
         this.servicoAdminCatalogo = servicoAdminCatalogo;
         this.fabricaFlyweight = fabricaFlyweight;
+        this.servicoConsultaCatalogo = servicoConsultaCatalogo;
+    }
+
+    /**
+     * Lista todos os itens comercializáveis (ativos e inativos) para operação administrativa do catálogo.
+     *
+     * <p>Objetivo Funcional: Permitir ao painel administrativo visualizar, ajustar preços e reativar
+     * SKUs ou combos logicamente inativados.</p>
+     * <p>Papel no Design Pattern: Endpoint de consulta administrativa uniforme da árvore <b>Composite</b>.</p>
+     *
+     * @param categoriaId UUID opcional da categoria raiz para filtrar a subárvore
+     * @return lista JSON padronizada contendo itens ativos e inativos do catálogo
+     */
+    @GetMapping("/itens")
+    public ResponseEntity<List<Map<String, Object>>> listarTodosItensCatalogo(
+        @RequestParam(required = false) UUID categoriaId
+    ) {
+        List<Map<String, Object>> resposta = this.servicoConsultaCatalogo
+            .listarTodosItensParaAdministracao(categoriaId)
+            .stream()
+            .map(item -> CatalogoRestMapper.mapearItemUniforme(item, this.servicoConsultaCatalogo))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(resposta);
     }
 
     /**

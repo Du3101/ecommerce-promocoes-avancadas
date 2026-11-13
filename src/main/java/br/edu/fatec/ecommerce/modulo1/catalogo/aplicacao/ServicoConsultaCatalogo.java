@@ -180,6 +180,37 @@ public class ServicoConsultaCatalogo {
      */
     @Transactional(readOnly = true)
     public List<ItemCatalogoComponent> listarItensComercializaveisAtivos(UUID categoriaIdOpcional) {
+        return coletarItensComercializaveis(categoriaIdOpcional, true);
+    }
+
+    /**
+     * Lista todos os itens comercializáveis (ativos e inativos) do catálogo para operação administrativa.
+     *
+     * <p>Objetivo Funcional: Permitir ao painel administrativo visualizar, ajustar preços e reativar SKUs ou combos inativados.</p>
+     * <p>Papel no Design Pattern: Consulta uniforme da hierarquia <b>Composite</b> sem filtrar registros logicamente inativos.</p>
+     *
+     * @param categoriaIdOpcional UUID da categoria raiz de filtro (opcional; se {@code null}, lista todo o catálogo)
+     * @return lista completa de variações e combos ativos e inativos hidratados
+     */
+    @Transactional(readOnly = true)
+    public List<ItemCatalogoComponent> listarTodosItensParaAdministracao(UUID categoriaIdOpcional) {
+        return coletarItensComercializaveis(categoriaIdOpcional, false);
+    }
+
+    /**
+     * Coleta variações simples e combos hidratados aplicando opcionalmente o filtro de ativação lógica.
+     *
+     * <p>Objetivo Funcional: Centralizar a varredura de produtos e combos evitando duplicação entre consultas públicas e administrativas.</p>
+     * <p>Papel no Design Pattern: Método auxiliar compartilhado de travessia da estrutura <b>Composite</b>.</p>
+     *
+     * @param categoriaIdOpcional UUID da categoria para filtragem hierárquica ou {@code null}
+     * @param apenasAtivos {@code true} para retornar apenas itens vigentes e vendáveis; {@code false} para incluir inativos
+     * @return lista de {@link ItemCatalogoComponent} correspondente ao critério
+     */
+    private List<ItemCatalogoComponent> coletarItensComercializaveis(
+        UUID categoriaIdOpcional,
+        boolean apenasAtivos
+    ) {
         List<Produto> produtos;
         List<ComboKitComposite> combos;
 
@@ -194,9 +225,9 @@ public class ServicoConsultaCatalogo {
 
         List<ItemCatalogoComponent> resultado = new ArrayList<>();
         for (Produto produto : produtos) {
-            if (produto.estaAtivo()) {
+            if (!apenasAtivos || produto.estaAtivo()) {
                 for (ProdutoVariacaoLeaf variacao : produto.obterVariacoes()) {
-                    if (variacao.estaAtivo()) {
+                    if (!apenasAtivos || variacao.estaAtivo()) {
                         resultado.add(variacao);
                     }
                 }
@@ -205,7 +236,7 @@ public class ServicoConsultaCatalogo {
 
         for (ComboKitComposite combo : combos) {
             hidratarComponentesDoComboRecursivamente(combo);
-            if (combo.estaAtivo()) {
+            if (!apenasAtivos || combo.estaAtivo()) {
                 resultado.add(combo);
             }
         }

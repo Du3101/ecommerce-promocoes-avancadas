@@ -3,6 +3,7 @@ package br.edu.fatec.ecommerce.modulo1.auditoria.api;
 import br.edu.fatec.ecommerce.modulo1.auditoria.aplicacao.ServicoConsultaAuditoria;
 import br.edu.fatec.ecommerce.modulo1.auditoria.dominio.RegistroAuditoria;
 import br.edu.fatec.ecommerce.modulo1.auditoria.dominio.TipoOperacaoAuditoria;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/admin/auditoria")
+@Tag(name = "Módulo 1 — Auditoria Administrativa", description = "Consulta imutável da trilha de operações administrativas registradas pelos Proxies")
 public class AuditoriaAdminController {
 
     private final ServicoConsultaAuditoria servicoConsultaAuditoria;

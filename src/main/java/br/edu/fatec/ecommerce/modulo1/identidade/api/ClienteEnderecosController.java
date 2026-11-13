@@ -4,6 +4,7 @@ import br.edu.fatec.ecommerce.modulo1.identidade.aplicacao.ServicoIdentidadeECli
 import br.edu.fatec.ecommerce.modulo1.identidade.dominio.Cliente;
 import br.edu.fatec.ecommerce.modulo1.identidade.dominio.Endereco;
 import br.edu.fatec.ecommerce.modulo1.identidade.dominio.OpcaoEnderecoEntrega;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.security.Principal;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/clientes/me")
+@Tag(name = "Módulo 1 — Identidade, Autenticação e Clientes", description = "Auto-cadastro de clientes, perfil, usuários internos e endereços (Null Object)")
 public class ClienteEnderecosController {
 
     private final ServicoIdentidadeECliente servicoIdentidade;

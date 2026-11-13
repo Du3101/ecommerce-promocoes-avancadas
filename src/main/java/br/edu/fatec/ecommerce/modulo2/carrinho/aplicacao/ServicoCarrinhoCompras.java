@@ -113,31 +113,7 @@ public class ServicoCarrinhoCompras {
         }
 
         CarrinhoCompras carrinho = obterOuCriarCarrinho(clienteId, sessaoId);
-
-        ItemCarrinho itemCarrinho;
-        if (visaoItem.eComboKit()) {
-            itemCarrinho = new ItemCarrinhoComboKit(
-                    UUID.randomUUID(),
-                    carrinho.getId(),
-                    visaoItem.sku(),
-                    visaoItem.nomeExibicao(),
-                    visaoItem.precoVigente(),
-                    quantidade,
-                    visaoItem.pesoTotalGramas(),
-                    visaoItem.categoriaPrincipalId()
-            );
-        } else {
-            itemCarrinho = new ItemCarrinhoProduto(
-                    UUID.randomUUID(),
-                    carrinho.getId(),
-                    visaoItem.sku(),
-                    visaoItem.nomeExibicao(),
-                    visaoItem.precoVigente(),
-                    quantidade,
-                    visaoItem.pesoTotalGramas(),
-                    visaoItem.categoriaPrincipalId()
-            );
-        }
+        ItemCarrinho itemCarrinho = criarItemCarrinhoPorVisao(carrinho.getId(), visaoItem, quantidade);
 
         carrinho.adicionarOuIncrementarItem(itemCarrinho);
         return carrinhoRepository.save(carrinho);
@@ -228,6 +204,127 @@ public class ServicoCarrinhoCompras {
         CarrinhoCompras carrinho = obterOuCriarCarrinho(clienteId, sessaoId);
         carrinho.removerCupom();
         return carrinhoRepository.save(carrinho);
+    }
+
+    /**
+     * Mescla aditivamente os itens e o cupom elegível de uma sessão visitante ao carrinho do cliente autenticado.
+     *
+     * <p>Objetivo funcional: Preservar itens adicionados antes do login no portal web somando
+     * quantidades de SKUs idênticos e preservando o cupom do visitante apenas quando o carrinho
+     * do cliente não possui cupom aplicado e o código segue válido.</p>
+     * <p>Papel no padrão: Operação transacional de conciliação entre agregados {@link CarrinhoCompras}
+     * com validação na porta {@link PortaConsultaCatalogoCliente}.</p>
+     *
+     * @param clienteId Identificador único do cliente autenticado (obrigatório).
+     * @param sessaoId Identificador da sessão anônima de visitante (opcional; se vazio mantém o carrinho atual).
+     * @return Carrinho consolidado e persistido do cliente autenticado.
+     */
+    public CarrinhoCompras mesclarCarrinhoVisitante(UUID clienteId, String sessaoId) {
+        Objects.requireNonNull(clienteId, "clienteId é obrigatório para mesclar o carrinho.");
+        CarrinhoCompras carrinhoCliente = obterOuCriarCarrinho(clienteId, null);
+
+        if (sessaoId == null || sessaoId.isBlank()) {
+            return carrinhoCliente;
+        }
+
+        Optional<CarrinhoCompras> visitanteOpt = carrinhoRepository.findBySessaoId(sessaoId.trim());
+        if (visitanteOpt.isEmpty()) {
+            return carrinhoCliente;
+        }
+
+        CarrinhoCompras carrinhoVisitante = visitanteOpt.get();
+        if (carrinhoVisitante.getId().equals(carrinhoCliente.getId())) {
+            return carrinhoCliente;
+        }
+
+        for (ItemCarrinho itemVisitante : java.util.List.copyOf(carrinhoVisitante.getItens())) {
+            copiarItemAtivoParaCarrinhoCliente(carrinhoCliente, itemVisitante);
+        }
+
+        aplicarCupomVisitanteSeElegivel(carrinhoCliente, carrinhoVisitante);
+
+        carrinhoVisitante.esvaziar();
+        CarrinhoCompras consolidado = carrinhoRepository.save(carrinhoCliente);
+        carrinhoRepository.delete(carrinhoVisitante);
+        return consolidado;
+    }
+
+    /**
+     * Copia um item do carrinho anônimo para o carrinho do cliente apenas se o SKU continuar ativo no catálogo.
+     *
+     * <p>Objetivo funcional: Garantir integridade de catálogo durante a migração da sessão visitante.</p>
+     * <p>Papel no padrão: Auxiliar polimórfico utilizando {@link VisaoItemCatalogoDTO} do Módulo 1.</p>
+     *
+     * @param carrinhoDestino Carrinho persistente do cliente autenticado.
+     * @param itemVisitante Linha originalmente adicionada na sessão visitante.
+     */
+    private void copiarItemAtivoParaCarrinhoCliente(CarrinhoCompras carrinhoDestino, ItemCarrinho itemVisitante) {
+        VisaoItemCatalogoDTO visaoItem = portaConsultaCatalogo.consultarItemPorSku(itemVisitante.getSku());
+        if (visaoItem == null || !visaoItem.ativo() || itemVisitante.getQuantidade() <= 0) {
+            return;
+        }
+        ItemCarrinho novoItem = criarItemCarrinhoPorVisao(
+                carrinhoDestino.getId(),
+                visaoItem,
+                itemVisitante.getQuantidade()
+        );
+        carrinhoDestino.adicionarOuIncrementarItem(novoItem);
+    }
+
+    /**
+     * Aplica o cupom trazido do carrinho visitante caso o cliente ainda não possua cupom e o cupom continue válido.
+     *
+     * <p>Objetivo funcional: Evitar perda de desconto digitado antes do login sem sobrescrever escolha prévia do cliente.</p>
+     * <p>Papel no padrão: Auxiliar de validação temporal e de meta financeira junto a {@link CupomPromocionalJpaRepository}.</p>
+     *
+     * @param carrinhoCliente Carrinho de destino após incorporação dos itens.
+     * @param carrinhoVisitante Carrinho anônimo de origem.
+     */
+    private void aplicarCupomVisitanteSeElegivel(CarrinhoCompras carrinhoCliente, CarrinhoCompras carrinhoVisitante) {
+        boolean clienteSemCupom = carrinhoCliente.getCupomCodigo() == null || carrinhoCliente.getCupomCodigo().isBlank();
+        String cupomVisitante = carrinhoVisitante.getCupomCodigo();
+        if (!clienteSemCupom || cupomVisitante == null || cupomVisitante.isBlank()) {
+            return;
+        }
+        cupomRepository.findByCodigoIgnoreCase(cupomVisitante.trim())
+                .filter(c -> c.isDisponivelParaUso(Instant.now(), carrinhoCliente.calcularSubtotalBruto()))
+                .ifPresent(c -> carrinhoCliente.aplicarCupom(c.getCodigo()));
+    }
+
+    /**
+     * Fábrica auxiliar que instancia {@link ItemCarrinhoComboKit} ou {@link ItemCarrinhoProduto} conforme o catálogo.
+     *
+     * <p>Objetivo funcional: Eliminar duplicação na criação de linhas do carrinho a partir da visão do catálogo.</p>
+     * <p>Papel no padrão: Factory Method auxiliar do domínio Composite de itens do carrinho.</p>
+     *
+     * @param carrinhoId UUID do agregado carrinho proprietário.
+     * @param visaoItem Visão DTO retornada pela porta de catálogo.
+     * @param quantidade Quantidade de unidades da linha.
+     * @return Subclasse concreta de {@link ItemCarrinho}.
+     */
+    private ItemCarrinho criarItemCarrinhoPorVisao(UUID carrinhoId, VisaoItemCatalogoDTO visaoItem, int quantidade) {
+        if (visaoItem.eComboKit()) {
+            return new ItemCarrinhoComboKit(
+                    UUID.randomUUID(),
+                    carrinhoId,
+                    visaoItem.sku(),
+                    visaoItem.nomeExibicao(),
+                    visaoItem.precoVigente(),
+                    quantidade,
+                    visaoItem.pesoTotalGramas(),
+                    visaoItem.categoriaPrincipalId()
+            );
+        }
+        return new ItemCarrinhoProduto(
+                UUID.randomUUID(),
+                carrinhoId,
+                visaoItem.sku(),
+                visaoItem.nomeExibicao(),
+                visaoItem.precoVigente(),
+                quantidade,
+                visaoItem.pesoTotalGramas(),
+                visaoItem.categoriaPrincipalId()
+        );
     }
 
     /**

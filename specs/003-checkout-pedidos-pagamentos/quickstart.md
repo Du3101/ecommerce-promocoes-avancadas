@@ -31,8 +31,8 @@ Suba a aplicação com o perfil de desenvolvimento:
 Acesse a interface interativa do Swagger UI:
 * **URL**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 * **Credenciais de Teste**:
-  - `admin@ecommerce.fatec.edu.br` / `Admin@Fatec2026` (`ADMIN`)
-  - `cliente.teste@fatec.edu.br` / `Cliente@Fatec2026` (`CLIENTE`)
+  - `admin@ecommerce.fatec.edu.br` / `AdminFatec@2026` (`ADMIN`)
+  - `cliente.demo@ecommerce.fatec.edu.br` / `ClienteFatec@2026` (`CLIENTE`)
 
 ---
 
