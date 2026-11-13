@@ -329,6 +329,70 @@ public class ServicoReservaEstoqueConcorrente {
     }
 
     /**
+     * Desfaz a baixa definitiva de uma reserva {@code CONFIRMADA}, devolvendo as unidades ao saldo disponível.
+     *
+     * <p>Objetivo Funcional: Atender ao cancelamento de um pedido já pago e ainda não enviado (Módulo 3).
+     * As unidades que saíram fisicamente do estoque na confirmação do pagamento voltam a ficar disponíveis
+     * para venda, com movimentação de entrada registrada para rastreabilidade.</p>
+     * <p>Papel no Design Pattern: Operação de compensação transacional com lock pessimista ordenado e
+     * proteção de idempotência delegada à máquina de estados de {@link ReservaEstoque}.</p>
+     *
+     * @param chaveOperacaoPedido chave única da reserva (mesma usada no checkout)
+     * @param motivo justificativa registrada na movimentação de estoque
+     * @return reserva no estado {@code ESTORNADA_POS_BAIXA}
+     * @throws RecursoNaoEncontradoException se não existir reserva para a chave
+     * @throws br.edu.fatec.ecommerce.compartilhado.excecao.TransicaoEstadoReservaInvalidaException
+     *         se a reserva não estiver {@code CONFIRMADA}
+     */
+    @Transactional
+    public ReservaEstoque estornarBaixaDefinitivaPorCancelamento(String chaveOperacaoPedido, String motivo) {
+        // 1. Bloqueia a reserva para serializar comandos concorrentes sobre a mesma chave
+        ReservaEstoque reserva = this.reservaRepository.buscarPorChaveOperacaoComLock(chaveOperacaoPedido)
+            .orElseThrow(() -> new RecursoNaoEncontradoException(
+                "Reserva de estoque não encontrada para a chave: " + chaveOperacaoPedido
+            ));
+
+        // 2. Transição de estado idempotente: se já foi estornada, não devolve as unidades de novo
+        boolean transicionouAgora = reserva.estornarBaixaDefinitiva();
+        if (!transicionouAgora) {
+            return reserva;
+        }
+
+        // 3. Bloqueia as posições de estoque em ordem alfabética de SKU (evita deadlock)
+        List<String> skusOrdenados = reserva.obterItens().stream()
+            .map(ItemReservaEstoque::obterSku)
+            .sorted()
+            .collect(Collectors.toList());
+        Map<String, ItemEstoque> estoquesBloqueados =
+            this.estoqueRepository.buscarMultiplosPorSkusComLockOrdenado(skusOrdenados).stream()
+                .collect(Collectors.toMap(ItemEstoque::obterSku, Function.identity()));
+
+        // 4. Devolve cada quantidade ao disponível e registra a movimentação de entrada
+        String motivoEfetivo = motivo != null && !motivo.isBlank()
+            ? motivo
+            : "Devolução ao estoque por cancelamento de pedido pago";
+        for (ItemReservaEstoque itemReserva : reserva.obterItens()) {
+            ItemEstoque posicao = estoquesBloqueados.get(itemReserva.obterSku());
+            if (posicao != null) {
+                int saldoAnterior = posicao.obterQuantidadeDisponivel();
+                posicao.aplicarAjusteSaldoDisponivel(itemReserva.obterQuantidadeReservada());
+                this.estoqueRepository.save(posicao);
+                this.movimentacaoRepository.save(
+                    MovimentacaoEstoque.registrarEntradaOuAjusteManual(
+                        posicao.obterSku(),
+                        itemReserva.obterQuantidadeReservada(),
+                        saldoAnterior,
+                        posicao.obterQuantidadeDisponivel(),
+                        motivoEfetivo + " [" + reserva.obterChaveOperacaoPedido() + "]",
+                        "SISTEMA_CANCELAMENTO_PEDIDO"
+                    )
+                );
+            }
+        }
+        return this.reservaRepository.save(reserva);
+    }
+
+    /**
      * Devolve as quantidades reservadas de uma reserva de volta ao saldo disponível de cada SKU.
      *
      * <p>Objetivo Funcional: Executar o estorno físico com lock ordenado e gravar movimentações.</p>

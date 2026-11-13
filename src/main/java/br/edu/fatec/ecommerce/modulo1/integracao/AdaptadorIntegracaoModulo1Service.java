@@ -8,9 +8,11 @@ import br.edu.fatec.ecommerce.modulo1.estoque.dominio.ItemReservaEstoque;
 import br.edu.fatec.ecommerce.modulo1.estoque.dominio.ReservaEstoque;
 import br.edu.fatec.ecommerce.modulo1.identidade.aplicacao.ServicoIdentidadeECliente;
 import br.edu.fatec.ecommerce.modulo1.identidade.dominio.Cliente;
+import br.edu.fatec.ecommerce.modulo1.identidade.dominio.Endereco;
 import br.edu.fatec.ecommerce.modulo1.identidade.dominio.OpcaoEnderecoEntrega;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -193,6 +195,78 @@ public class AdaptadorIntegracaoModulo1Service
             motivo
         );
         return converterReservaParaDto(reserva);
+    }
+
+    /**
+     * Desfaz a baixa definitiva de uma reserva confirmada (cancelamento de pedido pago no Módulo 3).
+     *
+     * <p>Objetivo Funcional: Devolver ao saldo disponível as unidades de um pedido pago e cancelado antes do envio.</p>
+     * <p>Papel no Design Pattern: Método adaptado da porta {@link PortaComandoReservaEstoque}, delegando ao
+     * serviço transacional de estoque.</p>
+     *
+     * @param chaveOperacaoPedido chave única da operação de pedido/reserva
+     * @param motivo motivo do cancelamento
+     * @return DTO {@link ResumoReservaEstoqueDTO} no estado {@code ESTORNADA_POS_BAIXA}
+     */
+    @Override
+    @Transactional
+    public ResumoReservaEstoqueDTO estornarBaixaDefinitivaPorCancelamento(
+        String chaveOperacaoPedido,
+        String motivo
+    ) {
+        ReservaEstoque reserva = this.servicoReservaEstoque.estornarBaixaDefinitivaPorCancelamento(
+            chaveOperacaoPedido,
+            motivo
+        );
+        return converterReservaParaDto(reserva);
+    }
+
+    /**
+     * Resolve o ID do perfil de cliente a partir do e-mail do usuário autenticado.
+     *
+     * <p>Objetivo Funcional: Permitir que o Módulo 3 descubra o {@code clienteId} real sem conhecer as entidades
+     * {@code Usuario}/{@code Cliente}.</p>
+     * <p>Papel no Design Pattern: Método adaptado da porta {@link PortaConsultaCatalogoCliente}.</p>
+     *
+     * @param emailUsuario e-mail do usuário autenticado
+     * @return UUID do cliente
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public UUID resolverClienteIdPorEmailUsuario(String emailUsuario) {
+        return this.servicoIdentidade.obterClientePorEmailUsuario(emailUsuario).obterId();
+    }
+
+    /**
+     * Retorna o endereço de entrega selecionado do cliente com todos os campos detalhados.
+     *
+     * <p>Objetivo Funcional: Alimentar o snapshot imutável do pedido no Módulo 3.</p>
+     * <p>Papel no Design Pattern: Fronteira do padrão <b>Null Object</b> — o
+     * {@code EnderecoAusenteNullObject} é traduzido em {@link Optional#empty()} para o consumidor externo.</p>
+     *
+     * @param clienteId UUID do cliente
+     * @return endereço completo ou {@link Optional#empty()} se não houver endereço válido selecionado
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<VisaoEnderecoEntregaDTO> consultarEnderecoEntregaSelecionado(UUID clienteId) {
+        Cliente cliente = this.servicoIdentidade.obterClientePorId(clienteId);
+        OpcaoEnderecoEntrega opcao = cliente.obterEnderecoSelecionado();
+        // Somente um Endereco real e válido possui os campos completos; o Null Object vira Optional.empty()
+        if (!(opcao instanceof Endereco endereco) || !endereco.possuiEnderecoValido()) {
+            return Optional.empty();
+        }
+        return Optional.of(new VisaoEnderecoEntregaDTO(
+            endereco.obterApelido(),
+            endereco.obterCep(),
+            endereco.obterLogradouro(),
+            endereco.obterNumero(),
+            endereco.obterComplemento(),
+            endereco.obterBairro(),
+            endereco.obterCidade(),
+            endereco.obterUfRegiao(),
+            endereco.obterResumoFormatado()
+        ));
     }
 
     /**

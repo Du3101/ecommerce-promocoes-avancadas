@@ -55,5 +55,23 @@ public interface PortaComandoReservaEstoque {
         String chaveOperacaoPedido,
         String motivo
     );
+
+    /**
+     * Desfaz de forma idempotente a baixa definitiva de uma reserva já {@code CONFIRMADA}, devolvendo as
+     * unidades ao saldo disponível.
+     *
+     * <p>Objetivo Funcional: Atender ao cancelamento de um pedido já pago e ainda não enviado (Módulo 3).
+     * {@link #liberarReservaPorCancelamentoOuRecusa(String, String)} só vale para reservas {@code ATIVA};
+     * depois do pagamento as unidades já saíram do estoque e precisam ser devolvidas por esta operação.</p>
+     * <p>Papel no Design Pattern: Comando de compensação idempotente {@code CONFIRMADA -> ESTORNADA_POS_BAIXA}.</p>
+     *
+     * @param chaveOperacaoPedido chave única da operação de pedido/reserva
+     * @param motivo motivo do cancelamento
+     * @return DTO {@link ResumoReservaEstoqueDTO} no estado {@code ESTORNADA_POS_BAIXA}
+     */
+    ResumoReservaEstoqueDTO estornarBaixaDefinitivaPorCancelamento(
+        String chaveOperacaoPedido,
+        String motivo
+    );
 }
 

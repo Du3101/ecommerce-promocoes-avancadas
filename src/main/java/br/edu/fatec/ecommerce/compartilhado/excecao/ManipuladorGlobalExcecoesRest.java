@@ -56,8 +56,9 @@ public class ManipuladorGlobalExcecoesRest {
      * @param ex exceção de acesso negado
      * @return resposta estruturada com status 403
      */
-    @ExceptionHandler(AcessoNegadoModulo1Exception.class)
-    public ResponseEntity<Map<String, Object>> tratarAcessoNegado(AcessoNegadoModulo1Exception ex) {
+    @ExceptionHandler({AcessoNegadoModulo1Exception.class,
+        br.edu.fatec.ecommerce.modulo3.compartilhado.excecao.AcessoNegadoModulo3Exception.class})
+    public ResponseEntity<Map<String, Object>> tratarAcessoNegado(RuntimeException ex) {
         return construirRespostaErro(HttpStatus.FORBIDDEN, "ACESSO_NEGADO", ex.getMessage());
     }
 
@@ -70,8 +71,9 @@ public class ManipuladorGlobalExcecoesRest {
      * @param ex exceção de conflito de estado ou duplicidade
      * @return resposta estruturada com status 409
      */
-    @ExceptionHandler(ConflitoDeEstadoOuDuplicidadeException.class)
-    public ResponseEntity<Map<String, Object>> tratarConflitoOuDuplicidade(ConflitoDeEstadoOuDuplicidadeException ex) {
+    @ExceptionHandler({ConflitoDeEstadoOuDuplicidadeException.class,
+        br.edu.fatec.ecommerce.modulo3.compartilhado.excecao.ConflitoCheckoutException.class})
+    public ResponseEntity<Map<String, Object>> tratarConflitoOuDuplicidade(RuntimeException ex) {
         return construirRespostaErro(HttpStatus.CONFLICT, "CONFLITO_REGRA_NEGOCIO", ex.getMessage());
     }
 
@@ -85,7 +87,7 @@ public class ManipuladorGlobalExcecoesRest {
      * @param ex exceção de regra de negócio ou argumento inválido
      * @return resposta estruturada com status 400
      */
-    @ExceptionHandler({RegraNegocioModulo1Exception.class, IllegalArgumentException.class})
+    @ExceptionHandler({RegraNegocioModulo1Exception.class, br.edu.fatec.ecommerce.modulo3.compartilhado.excecao.RegraNegocioModulo3Exception.class, IllegalArgumentException.class})
     public ResponseEntity<Map<String, Object>> tratarRegraNegocioInvalida(RuntimeException ex) {
         return construirRespostaErro(HttpStatus.BAD_REQUEST, "DADOS_INVALIDOS", ex.getMessage());
     }

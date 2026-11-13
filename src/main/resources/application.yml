@@ -33,6 +33,14 @@ server:
 ecommerce:
   modulo1:
     seed-demo-ativo: true
+  modulo3:
+    # Pedidos de demonstração (cliente.demo@ecommerce.fatec.edu.br / ClienteFatec@2026)
+    seed-demo-ativo: true
+    # Segredo compartilhado com o gateway de pagamento (header X-Gateway-Token do webhook)
+    webhook-token: gateway-simulado-fatec
+    frete-gratis:
+      valor-minimo: 250.00
+      peso-maximo-gramas: 5000
 
 
 ---
