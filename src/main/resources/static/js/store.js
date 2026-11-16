@@ -6,6 +6,7 @@
 
 const CHAVE_SESSAO_CARRINHO = 'ecommerce_sessao_carrinho';
 const CHAVE_AUTH_SESSAO = 'ecommerce_auth';
+const CHAVE_PREFERENCIA_TEMA = 'fatec_store_tema_v1';
 
 /**
  * Mapeamento declarativo dos estados do pedido (Módulo 3) para rótulos e classes CSS.
@@ -101,8 +102,50 @@ function carregarAuthSessao() {
     return { autenticado: false, usuarioId: null, email: null, perfis: [], tokenBasic: null };
 }
 
+/**
+ * Resolve o tema visual inicial da loja respeitando precedência: escolha manual salva > sistema > claro.
+ *
+ * Objetivo Funcional: Impedir discrepâncias de tema e garantir aderência às preferências do dispositivo na 1ª visita.
+ * Papel Arquitetural: Inicializador de preferência visual do Singleton de estado global.
+ *
+ * @returns {{tema: 'light'|'dark', origem: 'manual'|'sistema'}} Tema resolvido e sua origem
+ */
+function resolverPreferenciaInicialTema() {
+    try {
+        const salvo = localStorage.getItem(CHAVE_PREFERENCIA_TEMA);
+        if (salvo === 'light' || salvo === 'dark') {
+            return { tema: salvo, origem: 'manual' };
+        }
+    } catch {
+        // Ignora bloqueios de acesso a localStorage
+    }
+    const prefereEscuro = typeof window !== 'undefined'
+        && typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return { tema: prefereEscuro ? 'dark' : 'light', origem: 'sistema' };
+}
+
+/**
+ * Aplica o atributo semântico {@code data-theme} no elemento raiz do documento.
+ *
+ * Objetivo Funcional: Ativar imediatamente o conjunto de tokens claro ou escuro em toda a árvore DOM.
+ * Papel Arquitetural: Mutador de tema na fronteira de apresentação da SPA.
+ *
+ * @param {'light'|'dark'} tema Tema a aplicar
+ */
+function aplicarTemaNoDocumento(tema) {
+    if (typeof document !== 'undefined' && document.documentElement) {
+        document.documentElement.dataset.theme = tema;
+    }
+}
+
+const temaInicial = resolverPreferenciaInicialTema();
+aplicarTemaNoDocumento(temaInicial.tema);
+
 const estadoGlobal = {
     visaoAtiva: 'vitrine',
+    tema: temaInicial.tema,
+    origemTema: temaInicial.origem,
     configuracaoLoja: {
         modoDemonstracaoAtivo: false,
         freteGratisValorMinimo: 250.0,
@@ -124,6 +167,61 @@ const estadoGlobal = {
     ultimoPedidoCheckout: null,
     abaAdminAtiva: null
 };
+
+if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    const mediaEscura = window.matchMedia('(prefers-color-scheme: dark)');
+    const aoMudarTemaSistema = (evento) => {
+        if (estadoGlobal.origemTema !== 'sistema') {
+            return;
+        }
+        const proximo = evento.matches ? 'dark' : 'light';
+        if (estadoGlobal.tema === proximo) {
+            return;
+        }
+        estadoGlobal.tema = proximo;
+        aplicarTemaNoDocumento(proximo);
+        notificarMudancaEstado('TEMA');
+    };
+    if (typeof mediaEscura.addEventListener === 'function') {
+        mediaEscura.addEventListener('change', aoMudarTemaSistema);
+    } else if (typeof mediaEscura.addListener === 'function') {
+        mediaEscura.addListener(aoMudarTemaSistema);
+    }
+}
+
+/**
+ * Retorna o tema visual ativo no momento ('light' ou 'dark').
+ *
+ * Objetivo Funcional: Permitir inspeção reativa do tema atual pelos módulos de interface.
+ * Papel Arquitetural: Leitor do estado de tema gerenciado pelo Observer.
+ *
+ * @returns {'light'|'dark'} Tema vigente
+ */
+export function obterTemaAtual() {
+    return estadoGlobal.tema === 'dark' ? 'dark' : 'light';
+}
+
+/**
+ * Alterna diretamente o tema entre Modo Claro e Modo Escuro em 1 clique, persistindo a escolha manual.
+ *
+ * Objetivo Funcional: Atender à alternância imediata e persistente entre visitas sem recarregar a página.
+ * Papel Arquitetural: Comando de transição de tema no Singleton reativo (dispara evento 'TEMA').
+ *
+ * @returns {'light'|'dark'} Novo tema ativo após alternância
+ */
+export function alternarTema() {
+    const proximoTema = obterTemaAtual() === 'dark' ? 'light' : 'dark';
+    estadoGlobal.tema = proximoTema;
+    estadoGlobal.origemTema = 'manual';
+    try {
+        localStorage.setItem(CHAVE_PREFERENCIA_TEMA, proximoTema);
+    } catch {
+        // Prossegue em memória se localStorage estiver indisponível
+    }
+    aplicarTemaNoDocumento(proximoTema);
+    notificarMudancaEstado('TEMA');
+    return proximoTema;
+}
 
 /**
  * Registra uma função observadora invocada sempre que o estado compartilhado muda.

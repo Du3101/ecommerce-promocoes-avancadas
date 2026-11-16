@@ -48,15 +48,17 @@ public class PortalWebEEndpointsPublicosTest {
     private CampanhaPromocionalJpaRepository campanhaRepository;
 
     /**
-     * Verifica se a raiz {@code /} entrega o HTML5 da loja virtual sem exigir autenticação.
+     * Verifica se a raiz {@code /} encaminha para {@code index.html} e se os recursos estáticos do portal
+     * (incluindo alternador de tema escuro {@code #btn-alternar-tema}, hero {@code #vitrine-hero},
+     * bootstrap anti-FOUC e tokens {@code [data-theme="dark"]}) são entregues sem exigir autenticação.
      *
-     * <p>Objetivo Funcional: Confirmar que a vitrine estática principal está acessível em HTTP 200.</p>
-     * <p>Papel no Design Pattern: Verificação de borda HTTP na cadeia de segurança Spring Security.</p>
+     * <p>Objetivo Funcional: Garantir carregamento inicial imediato da loja, vitrine e tema claro/escuro pelo Spring Boot.</p>
+     * <p>Papel no Design Pattern: Validação da camada de borda HTTP estática.</p>
      *
      * @throws Exception caso ocorra erro na simulação MockMvc
      */
     @Test
-    @DisplayName("T016.1 - Deve encaminhar GET / para index.html e entregar recursos estáticos sem autenticação (HTTP 200)")
+    @DisplayName("T016.1 / 005-T017 - Deve encaminhar GET / para index.html e entregar portal com tema escuro e hero sem autenticação")
     public void deveEntregarPortalHtmlNaRaizSemAutenticacao() throws Exception {
         mockMvc.perform(get("/"))
             .andExpect(status().isOk())
@@ -66,10 +68,15 @@ public class PortalWebEEndpointsPublicosTest {
             .andExpect(status().isOk())
             .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
             .andExpect(content().string(containsString("FATEC Store")))
+            .andExpect(content().string(containsString("id=\"btn-alternar-tema\"")))
+            .andExpect(content().string(containsString("id=\"vitrine-hero\"")))
+            .andExpect(content().string(containsString("fatec_store_tema_v1")))
             .andExpect(content().string(containsString("src=\"/js/main.js\"")));
 
         mockMvc.perform(get("/css/tokens.css"))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString(":root[data-theme=\"dark\"]")))
+            .andExpect(content().string(containsString("--color-primary-contrast")));
 
         mockMvc.perform(get("/js/main.js"))
             .andExpect(status().isOk());

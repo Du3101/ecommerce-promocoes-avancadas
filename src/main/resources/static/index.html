@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FATEC Store — E-commerce com Promoções Avançadas</title>
+    <script>
+        (() => {
+            try {
+                const salvo = localStorage.getItem('fatec_store_tema_v1');
+                const tema = (salvo === 'light' || salvo === 'dark')
+                    ? salvo
+                    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.dataset.theme = tema;
+            } catch (_) {
+                document.documentElement.dataset.theme = 'light';
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="/css/tokens.css">
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/components.css">
@@ -50,6 +63,18 @@
             </nav>
 
             <div class="header-actions">
+                <button
+                    type="button"
+                    id="btn-alternar-tema"
+                    class="btn btn-theme-toggle btn-sm"
+                    aria-pressed="false"
+                    aria-label="Ativar modo escuro"
+                    title="Ativar modo escuro"
+                >
+                    <span class="theme-toggle-icon" aria-hidden="true"></span>
+                    <span class="theme-toggle-label">Escuro</span>
+                </button>
+
                 <div id="usuario-logado-pill" class="user-pill" hidden>
                     <span id="usuario-logado-email" class="user-pill-email"></span>
                     <span id="usuario-logado-perfis" class="user-pill-role"></span>
@@ -78,11 +103,44 @@
         <!-- VISÃO 1: VITRINE PÚBLICA -->
         <section id="view-vitrine" class="view-section active">
             <div class="container">
+                <!-- Hero Editorial Compacto (recolhido automaticamente ao filtrar/buscar) -->
+                <section id="vitrine-hero" class="vitrine-hero" aria-label="Destaques da loja">
+                    <div class="vitrine-hero-content">
+                        <span class="vitrine-hero-eyebrow">FATEC Store • Tecnologia &amp; Periféricos</span>
+                        <h1 class="vitrine-hero-title">Setup profissional com ofertas cumulativas em tempo real</h1>
+                        <p class="vitrine-hero-subtitle">
+                            Explore variações configuráveis, kits com desconto imediato e memória de cálculo transparente direto no carrinho.
+                        </p>
+                        <div class="vitrine-hero-actions">
+                            <button type="button" id="btn-hero-ver-ofertas" class="btn btn-primary btn-sm">
+                                Explorar Catálogo
+                            </button>
+                            <button type="button" id="btn-hero-ver-promos" class="btn btn-outline btn-sm">
+                                Ver Campanhas Ativas
+                            </button>
+                        </div>
+                    </div>
+                    <div class="vitrine-hero-metrics" aria-label="Diferenciais da loja">
+                        <div class="hero-metric-card">
+                            <strong>Frete Grátis PAC</strong>
+                            <span>Acima de R$ 250,00 (até 5 kg)</span>
+                        </div>
+                        <div class="hero-metric-card">
+                            <strong>Combos &amp; Kits</strong>
+                            <span>Economia calculada no catálogo</span>
+                        </div>
+                        <div class="hero-metric-card">
+                            <strong>Reserva Atômica</strong>
+                            <span>Saldo atualizado em tempo real</span>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Banners Dinâmicos de Promoções Ativas -->
                 <section class="promo-banners-section" aria-label="Campanhas promocionais vigentes">
                     <div class="section-header-inline">
                         <div>
-                            <h1>Ofertas e Promoções Ativas</h1>
+                            <h2 class="section-title-compact">Ofertas e Promoções Ativas</h2>
                             <p class="text-muted">Motor de promoções combinado ao vivo no carrinho (Composite + Decorator + Chain)</p>
                         </div>
                         <a href="/swagger-ui.html" target="_blank" rel="noopener" class="btn btn-ghost btn-xs">
