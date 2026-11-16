@@ -1,53 +1,106 @@
-:root {
-    /* Paleta Principal */
-    --color-bg: #f4f6fa;
+:root,
+:root[data-theme="light"] {
+    color-scheme: light;
+
+    /* Paleta Principal — Modo Claro */
+    --color-bg: #f3f6fb;
     --color-surface: #ffffff;
     --color-surface-alt: #f8fafc;
+    --color-surface-elevated: #ffffff;
     --color-border: #e2e8f0;
     --color-border-strong: #cbd5e1;
+
+    /* Cabeçalho, Barra Superior & Sobreposições */
+    --color-header-bg: rgba(255, 255, 255, 0.9);
+    --color-backdrop: rgba(15, 23, 42, 0.52);
+    --color-topbar-bg: linear-gradient(90deg, #0f172a, #1e3a8a);
+    --color-topbar-fg: #f8fafc;
+    --color-focus-ring: rgba(37, 99, 235, 0.28);
 
     /* Tipografia */
     --font-sans: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     --color-text: #0f172a;
     --color-text-muted: #475569;
-    --color-text-subtle: #64748b;
+    --color-text-subtle: #526075;
 
     /* Acentos e Marca */
     --color-primary: #2563eb;
     --color-primary-hover: #1d4ed8;
+    --color-primary-contrast: #ffffff;
     --color-primary-soft: #eff6ff;
     --color-secondary: #0f172a;
+    --color-cart-bg: #0f172a;
+    --color-cart-hover: #1e293b;
+    --color-cart-fg: #ffffff;
+
+    /* Hero Editorial & Banners Promocionais */
+    --color-hero-bg: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 55%, #f5f3ff 100%);
+    --color-hero-border: #c7d2fe;
+    --color-banner-gradient: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%);
+    --color-banner-fg: #ffffff;
+    --color-banner-pill-bg: rgba(255, 255, 255, 0.2);
+    --color-banner-divider: rgba(255, 255, 255, 0.24);
 
     /* Feedback e Status de Pedido / Estoque */
-    --color-success: #059669;
+    --color-success: #047857;
+    --color-success-fg: #065f46;
     --color-success-soft: #ecfdf5;
-    --color-warning: #d97706;
+    --color-success-border: #a7f3d0;
+
+    --color-warning: #b45309;
+    --color-warning-fg: #92400e;
     --color-warning-soft: #fffbeb;
+    --color-warning-border: #fde68a;
+
     --color-danger: #dc2626;
+    --color-danger-hover: #b91c1c;
+    --color-danger-contrast: #ffffff;
+    --color-danger-fg: #991b1b;
     --color-danger-soft: #fef2f2;
-    --color-info: #0284c7;
+    --color-danger-border: #fecaca;
+
+    --color-info: #0369a1;
+    --color-info-fg: #075985;
     --color-info-soft: #f0f9ff;
-    --color-purple: #7c3aed;
+    --color-info-border: #bae6fd;
+
+    --color-purple: #6d28d9;
+    --color-purple-fg: #5b21b6;
     --color-purple-soft: #f5f3ff;
+    --color-purple-border: #ddd6fe;
+
+    --color-neutral-bg: #f1f5f9;
+    --color-neutral-fg: #475569;
+
+    /* Timeline, Toast, Mídia dos Cards & Skeleton */
+    --color-timeline-bg: #e2e8f0;
+    --color-timeline-fg: #475569;
+    --color-toast-bg: #0f172a;
+    --color-toast-fg: #f8fafc;
+    --color-media-bg: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+    --color-media-combo-bg: linear-gradient(135deg, #f3e8ff 0%, #eef2ff 100%);
+    --color-media-border: #e2e8f0;
+    --color-skeleton-base: #e2e8f0;
+    --color-skeleton-shine: #f1f5f9;
 
     /* Tokens Semânticos por StatusPedido */
     --status-criado-bg: #f1f5f9;
     --status-criado-fg: #334155;
     --status-aguardando-bg: var(--color-warning-soft);
-    --status-aguardando-fg: #b45309;
+    --status-aguardando-fg: #92400e;
     --status-pago-bg: var(--color-success-soft);
-    --status-pago-fg: #047857;
+    --status-pago-fg: #065f46;
     --status-preparacao-bg: var(--color-info-soft);
-    --status-preparacao-fg: #0369a1;
+    --status-preparacao-fg: #075985;
     --status-enviado-bg: var(--color-purple-soft);
-    --status-enviado-fg: #6d28d9;
+    --status-enviado-fg: #5b21b6;
     --status-entregue-bg: #dcfce7;
-    --status-entregue-fg: #15803d;
+    --status-entregue-fg: #166534;
     --status-cancelado-bg: #f1f5f9;
-    --status-cancelado-fg: #64748b;
+    --status-cancelado-fg: #475569;
     --status-recusado-bg: var(--color-danger-soft);
-    --status-recusado-fg: #b91c1c;
+    --status-recusado-fg: #991b1b;
 
     /* Espaçamentos, Bordas e Sombras */
     --space-1: 0.25rem;
@@ -63,6 +116,112 @@
     --radius-full: 9999px;
 
     --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-    --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
-    --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.16);
+    --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 14px 36px rgba(15, 23, 42, 0.16);
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* Paleta Principal — Modo Escuro (Tech Store Contemporânea) */
+    --color-bg: #0b1120;
+    --color-surface: #111827;
+    --color-surface-alt: #1e293b;
+    --color-surface-elevated: #172033;
+    --color-border: #273449;
+    --color-border-strong: #3b4c68;
+
+    /* Cabeçalho, Barra Superior & Sobreposições */
+    --color-header-bg: rgba(11, 17, 32, 0.9);
+    --color-backdrop: rgba(2, 6, 23, 0.76);
+    --color-topbar-bg: linear-gradient(90deg, #020617, #0c2461);
+    --color-topbar-fg: #e2e8f0;
+    --color-focus-ring: rgba(56, 189, 248, 0.36);
+
+    /* Tipografia (Contraste >= 4.5:1 WCAG AA) */
+    --color-text: #f1f5f9;
+    --color-text-muted: #cbd5e1;
+    --color-text-subtle: #94a3b8;
+
+    /* Acentos e Marca */
+    --color-primary: #38bdf8;
+    --color-primary-hover: #7dd3fc;
+    --color-primary-contrast: #082f49;
+    --color-primary-soft: rgba(56, 189, 248, 0.15);
+    --color-secondary: #1e293b;
+    --color-cart-bg: #1e293b;
+    --color-cart-hover: #283548;
+    --color-cart-fg: #f1f5f9;
+
+    /* Hero Editorial & Banners Promocionais */
+    --color-hero-bg: linear-gradient(135deg, #0f172a 0%, #132242 58%, #1e1b4b 100%);
+    --color-hero-border: #283b5c;
+    --color-banner-gradient: linear-gradient(135deg, #0369a1 0%, #3730a3 100%);
+    --color-banner-fg: #f8fafc;
+    --color-banner-pill-bg: rgba(15, 23, 42, 0.42);
+    --color-banner-divider: rgba(255, 255, 255, 0.18);
+
+    /* Feedback e Status de Pedido / Estoque */
+    --color-success: #34d399;
+    --color-success-fg: #6ee7b7;
+    --color-success-soft: rgba(16, 185, 129, 0.16);
+    --color-success-border: rgba(52, 211, 153, 0.34);
+
+    --color-warning: #fbbf24;
+    --color-warning-fg: #fcd34d;
+    --color-warning-soft: rgba(245, 158, 11, 0.16);
+    --color-warning-border: rgba(251, 191, 36, 0.34);
+
+    --color-danger: #dc2626;
+    --color-danger-hover: #b91c1c;
+    --color-danger-contrast: #ffffff;
+    --color-danger-fg: #fda4af;
+    --color-danger-soft: rgba(244, 63, 94, 0.16);
+    --color-danger-border: rgba(253, 164, 175, 0.34);
+
+    --color-info: #38bdf8;
+    --color-info-fg: #7dd3fc;
+    --color-info-soft: rgba(56, 189, 248, 0.16);
+    --color-info-border: rgba(125, 211, 252, 0.34);
+
+    --color-purple: #c4b5fd;
+    --color-purple-fg: #ddd6fe;
+    --color-purple-soft: rgba(167, 139, 250, 0.18);
+    --color-purple-border: rgba(196, 181, 253, 0.34);
+
+    --color-neutral-bg: #1e293b;
+    --color-neutral-fg: #cbd5e1;
+
+    /* Timeline, Toast, Mídia dos Cards & Skeleton */
+    --color-timeline-bg: #1e293b;
+    --color-timeline-fg: #cbd5e1;
+    --color-toast-bg: #172033;
+    --color-toast-fg: #f1f5f9;
+    --color-media-bg: linear-gradient(135deg, #131f37 0%, #19253f 100%);
+    --color-media-combo-bg: linear-gradient(135deg, #241942 0%, #15213d 100%);
+    --color-media-border: #273449;
+    --color-skeleton-base: #1e293b;
+    --color-skeleton-shine: #283548;
+
+    /* Tokens Semânticos por StatusPedido (Modo Escuro) */
+    --status-criado-bg: #1e293b;
+    --status-criado-fg: #cbd5e1;
+    --status-aguardando-bg: #451a03;
+    --status-aguardando-fg: #fcd34d;
+    --status-pago-bg: #064e3b;
+    --status-pago-fg: #6ee7b7;
+    --status-preparacao-bg: #0c4a6e;
+    --status-preparacao-fg: #7dd3fc;
+    --status-enviado-bg: #2e1065;
+    --status-enviado-fg: #c4b5fd;
+    --status-entregue-bg: #052e16;
+    --status-entregue-fg: #86efac;
+    --status-cancelado-bg: #1e293b;
+    --status-cancelado-fg: #94a3b8;
+    --status-recusado-bg: #450a0a;
+    --status-recusado-fg: #fda4af;
+
+    --shadow-sm: 0 1px 2px rgba(2, 6, 23, 0.45);
+    --shadow-md: 0 8px 22px rgba(2, 6, 23, 0.55);
+    --shadow-lg: 0 18px 42px rgba(2, 6, 23, 0.7);
 }

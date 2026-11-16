@@ -118,7 +118,7 @@ export async function carregarPainelAdmin() {
         </button>
     `).join('');
 
-    conteudoEl.innerHTML = `<p class="text-muted">Carregando ${escapeHtml(ativaValida.titulo)}...</p>`;
+    conteudoEl.innerHTML = `<div class="skeleton-card">Carregando ${escapeHtml(ativaValida.titulo)}...</div>`;
     await ativaValida.renderizar(conteudoEl);
 }
 

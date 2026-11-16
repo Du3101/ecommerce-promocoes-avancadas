@@ -252,11 +252,77 @@ export function renderizarArvoreCategorias() {
 }
 
 /**
+ * Classifica deterministicamente o tipo de ilustração temática aplicável ao cartão de um item do catálogo.
+ *
+ * Objetivo Funcional: Garantir identidade visual coerente para variações e combos sem depender de URLs externas.
+ * Papel Arquitetural: Classificador puro de domínio visual do catálogo na Vitrine.
+ *
+ * @param {any} item ItemCatalogoComponent serializado pela API
+ * @returns {'combo'|'teclado'|'mouse'|'audio'|'monitor'|'hardware'} Categoria visual correspondente
+ */
+function classificarIlustracaoItem(item) {
+    if (item?.eComboKit) {
+        return 'combo';
+    }
+    const texto = `${item?.sku || ''} ${item?.nomeExibicao || ''}`.toUpperCase();
+    if (/(TEC|TECLADO|KEY)/.test(texto)) return 'teclado';
+    if (/(MOU|MOUSE)/.test(texto)) return 'mouse';
+    if (/(HEAD|FONE|AUDIO|MIC)/.test(texto)) return 'audio';
+    if (/(MON|TELA|DISPLAY)/.test(texto)) return 'monitor';
+    return 'hardware';
+}
+
+/**
+ * Gera o bloco visual SVG inline adaptado aos modos claro e escuro para o topo do card na Vitrine.
+ *
+ * Objetivo Funcional: Elevar a apresentação comercial de produtos e combos com iconografia vetorial nítida.
+ * Papel Arquitetural: Renderizador de mídia vetorial temático integrado aos Design Tokens CSS.
+ *
+ * @param {any} item Item atualmente selecionado no grupo de exibição
+ * @returns {string} HTML do contêiner {@code .product-card-media}
+ */
+function obterIlustracaoCardHtml(item) {
+    const tipo = classificarIlustracaoItem(item);
+    const svgs = {
+        combo: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 22 32 10l22 12-22 12-22-12Z"></path><path d="M10 22v20l22 12 22-12V22"></path><path d="M32 34v20"></path><path d="m21 16 22 12"></path></svg>',
+        teclado: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="18" width="52" height="28" rx="5"></rect><path d="M14 27h4M23 27h4M32 27h4M41 27h4M48 27h2M14 34h6M25 34h14M44 34h6M18 40h28"></path></svg>',
+        mouse: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="19" y="10" width="26" height="44" rx="13"></rect><path d="M32 10v16"></path><path d="M19 26h26"></path><rect x="30" y="15" width="4" height="7" rx="2"></rect></svg>',
+        audio: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 35v-3a18 18 0 0 1 36 0v3"></path><rect x="10" y="33" width="9" height="16" rx="4"></rect><rect x="45" y="33" width="9" height="16" rx="4"></rect><path d="M45 48c0 4-4 6-11 6"></path></svg>',
+        monitor: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="12" width="48" height="32" rx="4"></rect><path d="M24 52h16M32 44v8"></path><path d="M16 22h14M16 28h22"></path></svg>',
+        hardware: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="18" width="28" height="28" rx="4"></rect><rect x="25" y="25" width="14" height="14" rx="2"></rect><path d="M24 10v8M32 10v8M40 10v8M24 46v8M32 46v8M40 46v8M10 24h8M10 32h8M10 40h8M46 24h8M46 32h8M46 40h8"></path></svg>'
+    };
+    const classeExtra = tipo === 'combo' ? ' product-card-media--combo' : '';
+    return `<div class="product-card-media${classeExtra}" aria-hidden="true">${svgs[tipo] || svgs.hardware}</div>`;
+}
+
+/**
+ * Controla a exibição do hero editorial da vitrine conforme o estado de busca e filtro de categoria.
+ *
+ * Objetivo Funcional: Exibir o hero na vitrine completa e recolhê-lo automaticamente durante buscas ou filtragens
+ * para destacar os resultados logo acima da dobra inicial.
+ * Papel Arquitetural: Sincronizador visual do estado de filtragem na Vitrine Pública.
+ */
+function atualizarVisibilidadeHero() {
+    const hero = document.getElementById('vitrine-hero');
+    if (!hero) {
+        return;
+    }
+    const estado = obterEstado();
+    const filtroAtivo = Boolean(estado.categoriaSelecionadaId) || Boolean(String(estado.termoBusca || '').trim());
+    hero.hidden = filtroAtivo;
+}
+
+/**
  * Busca itens públicos do catálogo (com filtro recursivo opcional por categoriaId).
  * @param {string|null} [categoriaId] ID da categoria selecionada ou null para vitrine completa
  */
 export async function carregarItensCatalogo(categoriaId = null) {
     const grade = document.getElementById('grade-produtos');
+    if (grade && grade.querySelectorAll('.product-card').length === 0) {
+        grade.innerHTML = Array.from({ length: 3 }, () => `
+            <div class="skeleton-card" style="min-height: 220px;">Carregando ofertas do catálogo...</div>
+        `).join('');
+    }
     const url = categoriaId
         ? `/api/v1/catalogo/itens?categoriaId=${encodeURIComponent(categoriaId)}`
         : '/api/v1/catalogo/itens';
@@ -312,6 +378,7 @@ export function renderizarVitrineProdutos() {
 
     const estado = obterEstado();
     const termo = String(estado.termoBusca || '').trim().toLowerCase();
+    atualizarVisibilidadeHero();
 
     if (badgeBuscaEl) {
         if (termo) {
@@ -342,7 +409,8 @@ export function renderizarVitrineProdutos() {
     if (grupos.length === 0) {
         grade.innerHTML = `
             <div class="empty-state-card">
-                <p>Nenhum produto ou combo encontrado com os filtros atuais.</p>
+                <strong>Nenhum produto ou combo encontrado</strong>
+                <p class="text-muted" style="margin: 0;">Ajuste os termos de busca ou limpe o filtro de categoria para visualizar todo o catálogo.</p>
                 <button type="button" class="btn btn-outline btn-sm" id="btn-vitrine-limpar-filtros">Limpar Filtros</button>
             </div>
         `;
@@ -425,6 +493,7 @@ function renderizarCardGrupo(grupo) {
 
     return `
         <article class="product-card" data-sku-card="${escapeHtml(itemAtual.sku)}">
+            ${obterIlustracaoCardHtml(itemAtual)}
             <div class="product-card-top">
                 ${blocoTipo}
                 <span class="badge ${stockInfo.badgeClass}">${escapeHtml(stockInfo.texto)}</span>

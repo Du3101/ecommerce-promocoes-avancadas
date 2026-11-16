@@ -12,6 +12,7 @@ import { inicializarModuloCatalogo, recarregarVitrineCompleta, registrarAcaoAdic
 import { carregarPedidosCliente, carregarVisaoCheckout, inicializarModuloCheckoutEPedidos } from './checkout-pedidos.js';
 import {
     PERFIS_ADMINISTRATIVOS,
+    alternarTema,
     assinarEstado,
     atualizarEstado,
     escapeHtml,
@@ -19,6 +20,7 @@ import {
     formatarPeso,
     limparAutenticacao,
     obterEstado,
+    obterTemaAtual,
     usuarioPossuiAlgumPerfil
 } from './store.js';
 
@@ -181,10 +183,44 @@ export function alternarAbaModalAuth(aba) {
 }
 
 /**
+ * Atualiza o estado acessível, o rótulo e o ícone SVG do controle de alternância de tema no cabeçalho.
+ *
+ * Objetivo Funcional: Garantir que o usuário enxergue claramente qual tema será ativado e seu estado ARIA.
+ * Papel Arquitetural: Sincronizador de UI reativo conectado ao evento 'TEMA' do Observer central.
+ *
+ * @param {'light'|'dark'} [tema] Tema vigente (usa {@link obterTemaAtual} por padrão)
+ */
+function sincronizarBotaoTema(tema = obterTemaAtual()) {
+    const botao = document.getElementById('btn-alternar-tema');
+    if (!botao) {
+        return;
+    }
+
+    const eEscuro = tema === 'dark';
+    const proximoTexto = eEscuro ? 'Ativar modo claro' : 'Ativar modo escuro';
+    botao.setAttribute('aria-pressed', String(eEscuro));
+    botao.setAttribute('aria-label', proximoTexto);
+    botao.setAttribute('title', proximoTexto);
+
+    const iconSlot = botao.querySelector('.theme-toggle-icon');
+    const labelSlot = botao.querySelector('.theme-toggle-label');
+
+    if (iconSlot) {
+        iconSlot.innerHTML = eEscuro
+            ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>'
+            : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>';
+    }
+    if (labelSlot) {
+        labelSlot.textContent = eEscuro ? 'Claro' : 'Escuro';
+    }
+}
+
+/**
  * Atualiza elementos globais de cabeçalho e banners conforme o estado de autenticação e configuração.
  * @param {ReturnType<typeof obterEstado>} estado Estado global corrente
  */
 function sincronizarCabecalhoEConfiguracao(estado) {
+    sincronizarBotaoTema(estado.tema || obterTemaAtual());
     const pillLogado = document.getElementById('usuario-logado-pill');
     const emailEl = document.getElementById('usuario-logado-email');
     const perfisEl = document.getElementById('usuario-logado-perfis');
@@ -262,6 +298,13 @@ function registrarEventosGlobais() {
     });
 
     document.getElementById('btn-abrir-login')?.addEventListener('click', () => abrirModalAuth('login'));
+    document.getElementById('btn-alternar-tema')?.addEventListener('click', () => alternarTema());
+    document.getElementById('btn-hero-ver-ofertas')?.addEventListener('click', () => {
+        document.getElementById('grade-produtos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('btn-hero-ver-promos')?.addEventListener('click', () => {
+        document.getElementById('lista-banners-promocoes')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     document.getElementById('btn-conta-entrar')?.addEventListener('click', () => abrirModalAuth('login'));
     document.getElementById('btn-checkout-entrar')?.addEventListener('click', () => abrirModalAuth('login'));
     document.getElementById('btn-fechar-modal-auth')?.addEventListener('click', fecharModalAuth);
