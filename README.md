@@ -12,6 +12,16 @@ Aplicação monolítica modular em **Java 21 + Spring Boot 3.4.5** com **Portal 
 | **Módulo 2** | Carrinho persistente (visitante via `X-Sessao-Carrinho` e cliente logado), 4 mecânicas de promoção, resolução de conflitos, cupons e memória de cálculo transparente (piso R$ 0,00) | Strategy, Dynamic Factory, Chain of Responsibility, Decorator + Composite (Formação de Preço), Null Object (`CupomNulo`) |
 | **Módulo 3** | Checkout com snapshot imutável, máquina de estados do pedido, pagamentos idempotentes com webhook, cotação de frete PAC/SEDEX/Expressa + Frete Grátis, eventos e relatórios gerenciais | Facade, Template Method/Hook, State, Adapter/ACL, Abstract Factory, Service Locator, Observer, Mediator, Builder |
 | **Módulo 4 (Portal Web)** | Interface SPA completa em `src/main/resources/static/` + `401` JSON sem popup HTTP Basic + endpoints de vitrine pública, mesclagem no login (`POST /api/v1/carrinho/mesclar`), listagem admin geral (`GET /api/v1/admin/pedidos`) e simulação demo controlada | Observer (Store reativa), Facade HTTP (`api-client.js`), Table-Driven Dispatch RBAC (`admin.js`), Proxy Server-Side de Simulação Demo |
+| **Módulo 5 (Redesign & Dark Mode)** | Direção visual *Tech Store Contemporânea* com Modo Claro / Modo Escuro em 1 clique (`#btn-alternar-tema`), detecção inicial do dispositivo + anti-FOUC, contraste WCAG AA, hero recolhível em filtros, cards ilustrados SVG e responsividade (`>= 360px`) | Design Tokens Semânticos (`[data-theme]`), Sincronização Reativa de Tema (`store.js` / `main.js`), Renderização Vetorial Temática (`catalogo.js`) |
+
+---
+
+## Documentação Arquitetural e Diagramas UML
+
+- **Módulo 1 — Identidade, Catálogo, Estoque & Auditoria**: [`docs/modulo1-arquitetura-e-padroes.md`](docs/modulo1-arquitetura-e-padroes.md) *(Diagrama de Classes UML, Estados da Reserva, Sequência e Guia de Extensibilidade)*
+- **Módulo 2 — Carrinho, Motor de Promoções, Cupons & Preço**: [`docs/modulo2-arquitetura-e-padroes.md`](docs/modulo2-arquitetura-e-padroes.md) *(Diagrama de Classes, Sequência de Elegibilidade/Conflitos e Extensibilidade)*
+- **Módulo 3 — Checkout, Pedidos, Pagamentos, Frete & Eventos**: [`docs/modulo3-arquitetura-e-padroes.md`](docs/modulo3-arquitetura-e-padroes.md) *(Ciclo de Vida `State`, Sequência Checkout/Webhook Idempotente, Eventos e Relatórios)*
+- **Especificações & Rastreabilidade (SpecKit `001`–`005`)**: [`specs/`](specs/)
 
 ---
 
@@ -69,8 +79,8 @@ Aplicação monolítica modular em **Java 21 + Spring Boot 3.4.5** com **Portal 
 .\mvnw.cmd clean test
 ```
 
-Principais suítes adicionadas para o **Portal Web e Extensões REST (`modulo4`)**:
-- `src/test/java/br/edu/fatec/ecommerce/modulo4/PortalWebEEndpointsPublicosTest.java`
+Principais suítes adicionadas para o **Portal Web, Tema Claro/Escuro e Extensões REST (`modulo4`)**:
+- `src/test/java/br/edu/fatec/ecommerce/modulo4/PortalWebEEndpointsPublicosTest.java` *(entrega estática, `#btn-alternar-tema`, `#vitrine-hero`, `[data-theme="dark"]`, endpoints públicos e `401` sem popup)*
 - `src/test/java/br/edu/fatec/ecommerce/modulo4/MesclagemCarrinhoESimulacaoDemoTest.java`
 - `src/test/java/br/edu/fatec/ecommerce/modulo4/SimulacaoPagamentoDemoAtivoTest.java`
 - `src/test/java/br/edu/fatec/ecommerce/modulo4/CatalogoAdminListagemEEndpointsTest.java`
@@ -81,16 +91,16 @@ Principais suítes adicionadas para o **Portal Web e Extensões REST (`modulo4`)
 
 ```text
 src/main/resources/static/
-├── index.html                  # Shell SPA (Vitrine, Conta, Checkout, Admin RBAC, Drawer e Modais)
+├── index.html                  # Shell SPA (script anti-FOUC, Hero editorial, Vitrine, Conta, Checkout, Admin RBAC)
 ├── css/
-│   ├── tokens.css              # Design tokens, tipografia e cores de status de pedido
-│   ├── layout.css              # Grid responsivo, barra fixa, drawer lateral e breakpoints
-│   └── components.css          # Cards de vitrine/combo, chips de variação, timeline e tabelas
+│   ├── tokens.css              # Design tokens semânticos Light/Dark (WCAG AA) e 8 pares de status de pedido
+│   ├── layout.css              # Grid responsivo, cabeçalho fixo com alternador de tema, hero e breakpoints (>= 360px)
+│   └── components.css          # Cards SVG ilustrados, skeletons, alertas, chips de variação, timeline e tabelas
 └── js/
-    ├── store.js                # Observer reativo + sessão X-Sessao-Carrinho + utilidades XSS/BRL
+    ├── store.js                # Observer reativo + preferência de tema (fatec_store_tema_v1) + sessão X-Sessao-Carrinho
     ├── api-client.js           # Facade fetch() com Basic Auth / X-Sessao-Carrinho e handler 401 sem popup
-    ├── main.js                 # Bootstrapper, navegação multi-visão, toasts e modais
-    ├── catalogo.js             # Banners vigentes, árvore Composite, variações Flyweight e ComboKits
+    ├── main.js                 # Bootstrapper, navegação multi-visão, alternância de tema 1-clique, toasts e modais
+    ├── catalogo.js             # Hero recolhível em filtros, banners vigentes, árvore Composite, SVGs temáticos e ComboKits
     ├── carrinho.js             # Drawer lateral, barra de frete grátis, cupons e memória detalhada
     ├── auth-cliente.js         # Login sem popup, cadastro, acesso rápido demo e endereços (Null Object)
     ├── checkout-pedidos.js     # Timeline, snapshot imutável, cotação de frete, checkout e demo webhook
