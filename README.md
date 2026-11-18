@@ -106,3 +106,13 @@ src/main/resources/static/
     ├── checkout-pedidos.js     # Timeline, snapshot imutável, cotação de frete, checkout e demo webhook
     └── admin.js                # Painel dinâmico RBAC (Catálogo, Estoque, Promoções, Expedição, Auditoria, Relatórios)
 ```
+
+---
+
+## Equipe e Contribuições
+
+| Integrante | GitHub | Foco Principal |
+| :--- | :--- | :--- |
+| **Eduardo** | [`@Du3101`](https://github.com/Du3101) | Módulo 1 (Identidade, Catálogo, Estoque & Auditoria), Integração, Módulo 4 (Portal Web) e Módulo 5 (Redesign & Dark Mode) |
+| **Eduardo Juncker** | [`@Edudu720`](https://github.com/Edudu720) | Módulo 2 (Carrinho, Motor de Promoções, Cupons & Formação de Preço) |
+| **Henrique Sandrini** | [`@Henrique-Sandrini`](https://github.com/Henrique-Sandrini) | Módulo 3 (Checkout, Pedidos, Pagamentos, Frete, Eventos & Relatórios) |
