@@ -113,6 +113,6 @@ src/main/resources/static/
 
 | Integrante | GitHub | Foco Principal |
 | :--- | :--- | :--- |
-| **Eduardo** | [`@Du3101`](https://github.com/Du3101) | Módulo 1 (Identidade, Catálogo, Estoque & Auditoria), Integração, Módulo 4 (Portal Web) e Módulo 5 (Redesign & Dark Mode) |
+| **Eduardo Trevisan** | [`@Du3101`](https://github.com/Du3101) | Módulo 1 (Identidade, Catálogo, Estoque & Auditoria), Integração, Módulo 4 (Portal Web) e Módulo 5 (Redesign & Dark Mode) |
 | **Eduardo Juncker** | [`@Edudu720`](https://github.com/Edudu720) | Módulo 2 (Carrinho, Motor de Promoções, Cupons & Formação de Preço) |
 | **Henrique Sandrini** | [`@Henrique-Sandrini`](https://github.com/Henrique-Sandrini) | Módulo 3 (Checkout, Pedidos, Pagamentos, Frete, Eventos & Relatórios) |
