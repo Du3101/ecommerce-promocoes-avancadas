@@ -118,3 +118,4 @@ src/main/resources/static/
 | **Henrique Sandrini** | [`@Henrique-Sandrini`](https://github.com/Henrique-Sandrini) | Módulo 3 (Checkout, Pedidos, Pagamentos, Frete, Eventos & Relatórios) |
 
 <!-- Contribuição confirmada: Henrique Sandrini (Módulo 3) -->
+<!-- Contribuição confirmada: Eduardo Juncker Toras (Módulo 2) -->
