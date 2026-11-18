@@ -288,3 +288,6 @@ sequenceDiagram
 | `CancelamentoPedidoMediatorTest` | cancelamento antes/depois do pagamento, enviado bloqueado, 403, auditoria, webhook após cancelamento |
 | `RelatoriosGerenciaisAdminTest` | consistência aritmética e RBAC |
 | `InicializadorDemonstracaoModulo3Test` | carga de demonstração pelos fluxos reais |
+
+---
+*Documentação técnica ratificada pelo autor (Henrique Sandrini).*
