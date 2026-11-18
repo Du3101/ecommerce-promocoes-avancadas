@@ -290,4 +290,18 @@ sequenceDiagram
 | `InicializadorDemonstracaoModulo3Test` | carga de demonstração pelos fluxos reais |
 
 ---
+
+## 7. Roteiro de Demonstração e Verificação Rápida para Apresentação
+
+Para fins de avaliação acadêmica perante a banca examinadora da FATEC, os 7 padrões GoF implementados no Módulo 3 podem ser demonstrados de forma prática e reproduzível:
+
+1. **`Facade`**: Execução do fluxo integrado via `POST /api/v1/checkout` validando a orquestração dos 7 subsistemas, congelamento do snapshot financeiro e esvaziamento do carrinho.
+2. **`State`**: Inspeção da máquina de estados (`EstadoPedido`) com avanço de `CRIADO` até `ENTREGUE`, e comprovação do bloqueio de transições inválidas com status HTTP 400 (`TransicaoEstadoInvalidaException`).
+3. **`Adapter` & Camada Anticorrupção (ACL)**: Simulação de pagamentos via PIX, Cartão e Boleto sem contaminação do domínio por modelos de terceiros.
+4. **`Template Method` & `Hook Method`**: Execução do esqueleto algorítmico invariante no fechamento e no cancelamento de pedidos com ganchos customizáveis por forma de pagamento.
+5. **`Observer`**: Publicação reativa de eventos de domínio com múltiplos listeners desacoplados (`NotificacaoEmailListener`, `NotificacaoSmsListener`).
+6. **`Mediator`**: Coordenação da compensação transacional, estorno financeiro e devolução automática de estoque no cancelamento de compras.
+7. **`Abstract Factory` / `Service Locator`**: Resolução dinâmica em tempo de execução dos provedores de pagamento e modalidades de frete sem estruturas condicionais rígidas.
+
+---
 *Documentação técnica ratificada pelo autor (Henrique Sandrini).*
